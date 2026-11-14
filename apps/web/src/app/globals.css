@@ -2,28 +2,23 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --color-black: #000000;
-  --color-white: #ffffff;
-  --color-blue: #0000ff;
-  --color-red: #ff0000;
-  --color-green: #00aa00;
-  --color-yellow: #ffff00;
-}
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
 
-body {
-  background-color: #ffffff;
-  color: #000000;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  margin: 0;
-  padding: 0;
-}
+  body {
+    background-color: #f8fafc;
+    color: #0f172a;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+  }
 
-* {
-  border-color: #000000;
-  border-radius: 0 !important;
-}
-
-button, input, select, textarea {
-  border-radius: 0 !important;
+  ::selection {
+    background-color: #4f46e5;
+    color: #ffffff;
+  }
 }

@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import {
   MapPin,
@@ -13,7 +14,8 @@ import {
   ArrowLeft,
   ArrowRight,
   User as UserIcon,
-  ShieldCheck
+  ShieldCheck,
+  CheckCircle2
 } from 'lucide-react';
 import { useCartStore } from '../../store/cart-store';
 import { useAuthStore } from '../../store/auth-store';
@@ -49,21 +51,21 @@ export default function CheckoutPage() {
 
   if (!user) {
     return (
-      <div className="max-w-lg mx-auto my-12 border-4 border-black bg-white p-8 md:p-10 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] text-center font-mono">
-        <div className="inline-flex items-center justify-center w-16 h-16 bg-black text-white border-2 border-black mb-6">
-          <Lock size={32} />
+      <div className="max-w-md mx-auto my-16 bg-white rounded-3xl border border-slate-200 p-8 sm:p-10 shadow-sm text-center">
+        <div className="w-16 h-16 rounded-2xl bg-indigo-50 border border-indigo-100 flex items-center justify-center mx-auto mb-5 text-indigo-600">
+          <Lock size={28} />
         </div>
-        <h1 className="text-2xl font-black uppercase tracking-tight mb-2">
+        <h1 className="text-xl font-bold text-slate-900 mb-2">
           Authentication Required
         </h1>
-        <p className="text-xs text-neutral-700 leading-relaxed mb-6">
-          Please sign in to your account before proceeding to order checkout and delivery configuration.
+        <p className="text-xs text-slate-500 leading-relaxed mb-6">
+          Please sign in to configure delivery options and review your order details.
         </p>
         <button
           onClick={openAuthModal}
-          className="w-full bg-black text-white border-2 border-black py-3 px-4 text-xs font-bold uppercase hover:bg-neutral-800"
+          className="w-full bg-slate-900 hover:bg-slate-800 text-white py-3 px-4 rounded-xl text-xs font-semibold shadow-sm transition-colors"
         >
-          Sign In to Checkout
+          Sign In to Continue
         </button>
       </div>
     );
@@ -71,15 +73,17 @@ export default function CheckoutPage() {
 
   if (items.length === 0) {
     return (
-      <div className="max-w-lg mx-auto my-12 border-4 border-black bg-white p-8 md:p-10 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] text-center font-mono">
-        <ShoppingBag size={48} className="mx-auto mb-3 text-neutral-400" />
-        <h1 className="text-xl font-bold uppercase mb-2">Your Cart is Empty</h1>
-        <p className="text-xs text-neutral-600 mb-6">
-          Add products from our catalog to proceed with shipping and checkout.
+      <div className="max-w-md mx-auto my-16 bg-white rounded-3xl border border-slate-200 p-8 sm:p-10 shadow-sm text-center">
+        <div className="w-16 h-16 rounded-2xl bg-slate-100 flex items-center justify-center mx-auto mb-4 text-slate-400">
+          <ShoppingBag size={28} />
+        </div>
+        <h1 className="text-xl font-bold text-slate-900 mb-2">Your Cart is Empty</h1>
+        <p className="text-xs text-slate-500 mb-6">
+          Add items from our catalog to proceed with order delivery and checkout.
         </p>
         <Link
           href="/"
-          className="border-2 border-black bg-black text-white px-6 py-2.5 text-xs font-bold uppercase hover:bg-neutral-800 inline-block"
+          className="inline-block bg-slate-900 hover:bg-slate-800 text-white px-6 py-2.5 rounded-full text-xs font-semibold transition-colors"
         >
           Browse Catalog
         </Link>
@@ -98,239 +102,237 @@ export default function CheckoutPage() {
       return;
     }
     if (!shippingAddress.city.trim() || !shippingAddress.state.trim() || !shippingAddress.postalCode.trim()) {
-      setErrorMsg('Complete city, state, and postal code are required.');
+      setErrorMsg('Please complete all city, state, and postal code fields.');
       return;
     }
 
+    setCheckingOut(true);
+    setErrorMsg(null);
+
     try {
-      setCheckingOut(true);
-      setErrorMsg(null);
+      const fullAddressString = `${shippingAddress.fullName}, ${shippingAddress.streetAddress}, ${shippingAddress.city}, ${shippingAddress.state} ${shippingAddress.postalCode}, ${shippingAddress.country}`;
 
-      const orderItems = items.map((i) => ({
-        productId: i.product.id,
-        quantity: i.quantity
-      }));
-
-      const formattedAddress = `${shippingAddress.fullName}, ${shippingAddress.streetAddress}, ${shippingAddress.city}, ${shippingAddress.state} ${shippingAddress.postalCode}, ${shippingAddress.country}`;
-
-      // Create order with shipping address in PENDING status (not paid directly)
-      const order = await apiClient.createOrder(orderItems, formattedAddress);
+      const res = await apiClient.createOrder(
+        items.map((i) => ({ productId: i.product.id, quantity: i.quantity })),
+        fullAddressString
+      );
 
       clearCart();
-      router.push(`/order/success?order_id=${order.id}&status=PENDING`);
+      router.push(`/order/success?order_id=${res.id}&status=${res.status}`);
     } catch (err) {
-      setErrorMsg(err instanceof Error ? err.message : 'Order submission failed');
-    } finally {
+      setErrorMsg(err instanceof Error ? err.message : 'Failed to record order. Please try again.');
       setCheckingOut(false);
     }
   };
 
   return (
-    <div className="max-w-4xl mx-auto my-8 font-mono">
+    <div className="space-y-8">
+      {/* Back Button */}
       <Link
         href="/"
-        className="inline-flex items-center gap-1.5 text-xs font-bold uppercase mb-6 hover:underline"
+        className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-indigo-600 transition-colors"
       >
         <ArrowLeft size={14} />
-        <span>Return to Storefront</span>
+        <span>Return to Catalog</span>
       </Link>
 
-      <div className="border-b-4 border-black pb-4 mb-8">
-        <h1 className="text-3xl font-black uppercase tracking-tight">Checkout & Shipping</h1>
-        <p className="text-xs text-neutral-600 mt-1">
-          Complete your delivery details. Payment processing is currently offline.
+      <div className="border-b border-slate-200 pb-5">
+        <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
+          Checkout & Shipping
+        </h1>
+        <p className="text-xs text-slate-500 mt-1">
+          Review your delivery details and order specifications
         </p>
       </div>
 
+      {/* Error Alert */}
       {errorMsg && (
-        <div className="bg-red-500 text-white p-3 text-xs mb-6 border-2 border-black">
-          {errorMsg}
+        <div className="p-4 bg-rose-50 border border-rose-200 rounded-2xl text-rose-700 text-xs flex items-center gap-2">
+          <AlertTriangle size={16} className="text-rose-600 shrink-0" />
+          <span>{errorMsg}</span>
         </div>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-        {/* Left Column: Shipping & Payment */}
-        <form onSubmit={handlePlacePendingOrder} className="md:col-span-2 space-y-6">
-          {/* Step 1: Shipping Address */}
-          <div className="border-2 border-black bg-white p-6 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-            <div className="flex items-center gap-2 border-b-2 border-black pb-3 mb-4 font-bold uppercase text-sm">
-              <MapPin size={18} />
-              <span>1. Shipping Address</span>
-            </div>
+      {/* 2-Column Responsive Checkout */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12">
+        {/* Left Column: Delivery & Payment Details (7 cols) */}
+        <div className="lg:col-span-7 space-y-6">
+          <form id="checkout-form" onSubmit={handlePlacePendingOrder} className="bg-white rounded-3xl border border-slate-200/80 p-6 sm:p-8 shadow-sm space-y-6">
+            <div>
+              <div className="flex items-center gap-2 text-sm font-bold text-slate-900 mb-4 pb-2 border-b border-slate-100">
+                <MapPin size={18} className="text-indigo-600" />
+                <span>1. Shipping Information</span>
+              </div>
 
-            <div className="space-y-4 text-xs">
-              <div>
-                <label className="block font-bold uppercase mb-1">Recipient Full Name *</label>
-                <div className="relative">
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1.5">Recipient Full Name</label>
                   <input
                     type="text"
                     required
+                    placeholder="e.g. Alex Johnson"
                     value={shippingAddress.fullName}
                     onChange={(e) => setShippingAddress({ ...shippingAddress, fullName: e.target.value })}
-                    placeholder="e.g. Jane Doe"
-                    className="w-full border-2 border-black p-2.5 text-xs focus:outline-none"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 focus:bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all"
                   />
-                  <UserIcon size={14} className="absolute right-3 top-3 text-neutral-400" />
                 </div>
-              </div>
 
-              <div>
-                <label className="block font-bold uppercase mb-1">Street Address *</label>
-                <input
-                  type="text"
-                  required
-                  value={shippingAddress.streetAddress}
-                  onChange={(e) => setShippingAddress({ ...shippingAddress, streetAddress: e.target.value })}
-                  placeholder="e.g. 100 Main Street, Suite 400"
-                  className="w-full border-2 border-black p-2.5 text-xs focus:outline-none"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block font-bold uppercase mb-1">City *</label>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1.5">Street Address</label>
                   <input
                     type="text"
                     required
-                    value={shippingAddress.city}
-                    onChange={(e) => setShippingAddress({ ...shippingAddress, city: e.target.value })}
-                    placeholder="e.g. Seattle"
-                    className="w-full border-2 border-black p-2.5 text-xs focus:outline-none"
+                    placeholder="e.g. 742 Evergreen Terrace, Suite 100"
+                    value={shippingAddress.streetAddress}
+                    onChange={(e) => setShippingAddress({ ...shippingAddress, streetAddress: e.target.value })}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 focus:bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all"
                   />
                 </div>
-                <div>
-                  <label className="block font-bold uppercase mb-1">State / Province *</label>
-                  <input
-                    type="text"
-                    required
-                    value={shippingAddress.state}
-                    onChange={(e) => setShippingAddress({ ...shippingAddress, state: e.target.value })}
-                    placeholder="e.g. WA"
-                    className="w-full border-2 border-black p-2.5 text-xs focus:outline-none"
-                  />
-                </div>
-              </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block font-bold uppercase mb-1">Postal / ZIP Code *</label>
-                  <input
-                    type="text"
-                    required
-                    value={shippingAddress.postalCode}
-                    onChange={(e) => setShippingAddress({ ...shippingAddress, postalCode: e.target.value })}
-                    placeholder="e.g. 98101"
-                    className="w-full border-2 border-black p-2.5 text-xs focus:outline-none"
-                  />
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1.5">City</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="Springfield"
+                      value={shippingAddress.city}
+                      onChange={(e) => setShippingAddress({ ...shippingAddress, city: e.target.value })}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 focus:bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1.5">State / Province</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="OR"
+                      value={shippingAddress.state}
+                      onChange={(e) => setShippingAddress({ ...shippingAddress, state: e.target.value })}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 focus:bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all"
+                    />
+                  </div>
                 </div>
-                <div>
-                  <label className="block font-bold uppercase mb-1">Country *</label>
-                  <input
-                    type="text"
-                    required
-                    value={shippingAddress.country}
-                    onChange={(e) => setShippingAddress({ ...shippingAddress, country: e.target.value })}
-                    className="w-full border-2 border-black p-2.5 text-xs focus:outline-none"
-                  />
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1.5">Postal / ZIP Code</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="97477"
+                      value={shippingAddress.postalCode}
+                      onChange={(e) => setShippingAddress({ ...shippingAddress, postalCode: e.target.value })}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 focus:bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1.5">Country</label>
+                    <input
+                      type="text"
+                      required
+                      value={shippingAddress.country}
+                      onChange={(e) => setShippingAddress({ ...shippingAddress, country: e.target.value })}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 focus:bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all"
+                    />
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
 
-          {/* Step 2: Payment Option (Gateway Down) */}
-          <div className="border-2 border-black bg-white p-6 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-            <div className="flex items-center gap-2 border-b-2 border-black pb-3 mb-4 font-bold uppercase text-sm">
-              <CreditCard size={18} />
-              <span>2. Payment Option</span>
-            </div>
-
-            <div className="border-2 border-black p-4 mb-4 bg-neutral-50 flex justify-between items-center text-xs">
-              <div>
-                <div className="font-bold uppercase">Credit / Debit Card Online Payment</div>
-                <div className="text-neutral-600 text-[11px] mt-0.5">Automated clearing via payment gateway</div>
+            {/* Payment Section */}
+            <div>
+              <div className="flex items-center gap-2 text-sm font-bold text-slate-900 mb-4 pb-2 border-b border-slate-100">
+                <CreditCard size={18} className="text-indigo-600" />
+                <span>2. Payment Status & Options</span>
               </div>
-              <span className="bg-red-500 text-white font-bold text-[10px] px-2 py-0.5 border border-black uppercase">
-                Gateway Offline
-              </span>
-            </div>
 
-            {/* PAYMENT GATEWAY CURRENTLY DOWN ALERT */}
-            <div className="border-2 border-black bg-red-500 text-white p-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] space-y-2">
-              <div className="flex items-center gap-2 font-black uppercase text-xs">
-                <AlertTriangle size={18} className="flex-shrink-0" />
-                <span>Payment Gateway Currently Down</span>
+              {/* Prominent Payment Offline Warning Box */}
+              <div className="p-5 bg-amber-50 border border-amber-200/90 rounded-2xl text-amber-900 mb-4">
+                <div className="flex items-center gap-2 mb-2 font-bold text-xs uppercase tracking-wider text-amber-800">
+                  <AlertTriangle size={18} className="text-amber-600 shrink-0" />
+                  <span>Payment Gateway Temporarily Offline</span>
+                </div>
+                <p className="text-xs text-amber-700 leading-relaxed">
+                  Our credit card processing provider is undergoing scheduled system upgrades.
+                  You will <span className="font-bold text-amber-900">not be charged directly</span>.
+                  Your order will be preserved and registered with <span className="font-bold text-amber-900">PENDING (Payment Required)</span> status.
+                </p>
               </div>
-              <p className="text-xs leading-relaxed">
-                Notice: Our payment gateway is currently down for maintenance. Direct online card clearance cannot be processed directly at this time.
-              </p>
-              <div className="bg-black text-white px-2 py-0.5 text-[10px] font-bold uppercase inline-block border border-white/20">
-                Not Paid Directly
-              </div>
-            </div>
-
-            <div className="mt-6 space-y-3">
-              <button
-                type="button"
-                disabled
-                className="w-full bg-neutral-300 text-neutral-600 border-2 border-black py-3 px-4 font-bold text-xs uppercase cursor-not-allowed flex items-center justify-center gap-2"
-              >
-                <Lock size={14} />
-                <span>Payment Gateway Currently Down</span>
-              </button>
 
               <button
                 type="submit"
                 disabled={checkingOut}
-                className="w-full bg-black text-white border-2 border-black py-3.5 px-4 font-bold text-xs uppercase flex items-center justify-center gap-2 hover:bg-neutral-800 disabled:opacity-50"
+                className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-4 px-6 rounded-2xl font-bold text-sm shadow-md transition-all flex items-center justify-center gap-2 disabled:opacity-50"
               >
-                <Package size={16} />
-                <span>{checkingOut ? 'Recording Order...' : 'Place Order (Payment Pending)'}</span>
-                <ArrowRight size={14} />
+                {checkingOut ? (
+                  <>
+                    <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></span>
+                    <span>Recording Order in Pending State...</span>
+                  </>
+                ) : (
+                  <>
+                    <Package size={16} />
+                    <span>Place Order (Payment Pending) • ${total.toFixed(2)}</span>
+                  </>
+                )}
               </button>
             </div>
-          </div>
-        </form>
+          </form>
+        </div>
 
-        {/* Right Column: Order Summary */}
-        <div className="space-y-4">
-          <div className="border-2 border-black bg-white p-5 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-            <h3 className="font-bold uppercase text-xs border-b-2 border-black pb-2 mb-3">
+        {/* Right Column: Order Summary (5 cols) */}
+        <div className="lg:col-span-5">
+          <div className="bg-white rounded-3xl border border-slate-200/80 p-6 sm:p-7 shadow-sm sticky top-24 space-y-6">
+            <h3 className="font-bold text-slate-900 text-base pb-3 border-b border-slate-100">
               Order Summary ({items.length} items)
             </h3>
 
-            <div className="divide-y divide-black/20 text-xs mb-4">
+            {/* Item list */}
+            <div className="space-y-4 max-h-80 overflow-y-auto pr-1">
               {items.map((item) => (
-                <div key={item.product.id} className="py-2.5 flex justify-between">
-                  <div className="pr-2">
-                    <div className="font-bold line-clamp-1">{item.product.name}</div>
-                    <div className="text-neutral-500 text-[11px]">Qty: {item.quantity}</div>
+                <div key={item.product.id} className="flex gap-3 items-center">
+                  <div className="relative w-14 h-14 rounded-xl overflow-hidden bg-slate-100 shrink-0 border border-slate-200/60">
+                    <Image
+                      src={item.product.imageUrl}
+                      alt={item.product.name}
+                      fill
+                      className="object-cover"
+                    />
                   </div>
-                  <div className="font-black flex-shrink-0">
+                  <div className="flex-1 min-w-0">
+                    <h4 className="font-semibold text-xs text-slate-900 truncate">
+                      {item.product.name}
+                    </h4>
+                    <span className="text-[11px] text-slate-500">Qty: {item.quantity}</span>
+                  </div>
+                  <span className="font-bold text-xs text-slate-900">
                     ${(item.product.price * item.quantity).toFixed(2)}
-                  </div>
+                  </span>
                 </div>
               ))}
             </div>
 
-            <div className="border-t-2 border-black pt-3 space-y-1.5 text-xs">
-              <div className="flex justify-between">
+            {/* Totals */}
+            <div className="pt-4 border-t border-slate-100 space-y-2 text-xs">
+              <div className="flex justify-between text-slate-600">
                 <span>Subtotal</span>
-                <span className="font-bold">${total.toFixed(2)}</span>
+                <span className="font-semibold text-slate-800">${total.toFixed(2)}</span>
               </div>
-              <div className="flex justify-between text-neutral-600">
-                <span>Shipping</span>
-                <span className="font-bold">FREE</span>
+              <div className="flex justify-between text-slate-600">
+                <span>Standard Delivery</span>
+                <span className="font-semibold text-emerald-600 uppercase">Free</span>
               </div>
-              <div className="border-t border-black pt-2 flex justify-between font-black text-sm">
-                <span>Total Due</span>
-                <span>${total.toFixed(2)} USD</span>
+              <div className="pt-3 border-t border-slate-200 flex justify-between items-baseline">
+                <span className="font-bold text-slate-900 text-sm">Total Due</span>
+                <span className="font-black text-2xl text-slate-900">${total.toFixed(2)}</span>
               </div>
             </div>
-          </div>
 
-          <div className="border border-black p-3 bg-neutral-100 text-[11px] text-neutral-600 flex items-center gap-2">
-            <ShieldCheck size={16} className="flex-shrink-0 text-black" />
-            <span>Orders placed during gateway downtime are reserved in PENDING status.</span>
+            <div className="p-3 bg-slate-50 rounded-xl text-[11px] text-slate-500 flex items-center gap-2">
+              <ShieldCheck size={16} className="text-emerald-500 shrink-0" />
+              <span>Encrypted Checkout & Competitor Fair Price Match</span>
+            </div>
           </div>
         </div>
       </div>

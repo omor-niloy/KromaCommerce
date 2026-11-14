@@ -7,7 +7,9 @@ import {
   ExternalLink,
   RefreshCw,
   Clock,
-  ShieldCheck
+  ShieldCheck,
+  CheckCircle2,
+  Activity
 } from 'lucide-react';
 import { PriceComparisonSummary } from '../types';
 import { apiClient } from '../lib/api-client';
@@ -55,9 +57,9 @@ export const PriceComparisonWidget: React.FC<PriceComparisonWidgetProps> = ({
 
   if (loading) {
     return (
-      <div className="border-2 border-black p-4 bg-neutral-50 font-mono text-xs">
-        <div className="flex items-center gap-2">
-          <RefreshCw size={14} className="animate-spin" />
+      <div className="bg-white rounded-2xl border border-slate-200 p-6 my-6 shadow-xs">
+        <div className="flex items-center gap-3 text-slate-500 text-sm">
+          <RefreshCw size={16} className="animate-spin text-indigo-600" />
           <span>Polling Playwright Price Intelligence Feed...</span>
         </div>
       </div>
@@ -66,16 +68,19 @@ export const PriceComparisonWidget: React.FC<PriceComparisonWidgetProps> = ({
 
   if (!comparison || comparison.records.length === 0) {
     return (
-      <div className="border-2 border-black p-4 bg-neutral-50 font-mono text-xs">
-        <div className="font-bold mb-1">COMPETITOR PRICE INTELLIGENCE</div>
-        <p className="text-neutral-600 mb-3">No active competitor snapshots tracked yet.</p>
+      <div className="bg-white rounded-2xl border border-slate-200 p-6 my-6 shadow-xs">
+        <div className="flex items-center gap-2 mb-2">
+          <Activity size={18} className="text-indigo-600" />
+          <h3 className="font-bold text-slate-900 text-sm">Competitor Price Intelligence</h3>
+        </div>
+        <p className="text-xs text-slate-500 mb-4">No active competitor snapshots recorded yet for this item.</p>
         <button
           onClick={handleSync}
           disabled={syncing}
-          className="border-2 border-black px-3 py-1 bg-black text-white hover:bg-neutral-800 flex items-center gap-1.5"
+          className="bg-slate-900 hover:bg-slate-800 text-white px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 transition-colors disabled:opacity-50"
         >
-          <RefreshCw size={12} className={syncing ? 'animate-spin' : ''} />
-          <span>{syncing ? 'Scraping Live...' : 'Trigger Playwright Sync'}</span>
+          <RefreshCw size={13} className={syncing ? 'animate-spin' : ''} />
+          <span>{syncing ? 'Crawling Competitors...' : 'Trigger Playwright Sync'}</span>
         </button>
       </div>
     );
@@ -87,106 +92,143 @@ export const PriceComparisonWidget: React.FC<PriceComparisonWidgetProps> = ({
   const savingsPct = Math.round((Math.abs(priceDifference) / lowest) * 100);
 
   return (
-    <div className="border-2 border-black bg-white p-5 my-6">
-      <div className="flex justify-between items-start border-b-2 border-black pb-3 mb-4">
+    <div className="bg-white rounded-2xl border border-slate-200/90 p-6 my-8 shadow-sm">
+      {/* Widget Header */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pb-4 mb-5 border-b border-slate-100">
         <div>
           <div className="flex items-center gap-2">
-            <span className="font-black text-sm uppercase tracking-wider font-mono">
+            <span className="font-bold text-slate-900 text-base">
               Competitor Price Intelligence
             </span>
-            <span className="bg-black text-white px-1.5 py-0.5 text-[10px] font-mono">
+            <span className="bg-indigo-50 text-indigo-700 border border-indigo-200/60 text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-indigo-600"></span>
               PLAYWRIGHT AUTOMATED
             </span>
           </div>
-          <p className="text-xs text-neutral-600 font-mono mt-0.5">
-            Real-time market audit comparing verified retailer prices.
+          <p className="text-xs text-slate-500 mt-0.5">
+            Real-time headless DOM extraction tracking market competitor variances
           </p>
         </div>
 
         <button
           onClick={handleSync}
           disabled={syncing}
-          title="Refresh Playwright price scan"
-          className="border-2 border-black px-2.5 py-1 text-xs font-mono font-bold flex items-center gap-1 hover:bg-black hover:text-white transition-colors"
+          className="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3.5 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-colors disabled:opacity-50"
         >
-          <RefreshCw size={12} className={syncing ? 'animate-spin' : ''} />
-          <span>{syncing ? 'Scanning...' : 'Sync'}</span>
+          <RefreshCw size={13} className={syncing ? 'animate-spin text-indigo-600' : 'text-slate-500'} />
+          <span>{syncing ? 'Syncing...' : 'Sync Live'}</span>
         </button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-5">
-        <div className="border-2 border-black p-3 bg-neutral-50">
-          <div className="text-xs font-mono uppercase text-neutral-600">Our Price</div>
-          <div className="text-2xl font-black font-mono mt-1">${ourPrice.toFixed(2)}</div>
+      {/* Summary Highlight Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
+        <div className="bg-slate-50 rounded-xl p-4 border border-slate-100">
+          <span className="text-[11px] font-semibold text-slate-400 block uppercase tracking-wider">
+            Our Store Price
+          </span>
+          <span className="text-2xl font-black text-slate-900 tracking-tight mt-1 block">
+            ${ourPrice.toFixed(2)}
+          </span>
+          <span className="text-[11px] text-slate-500 mt-0.5 block flex items-center gap-1">
+            <CheckCircle2 size={12} className="text-emerald-500" />
+            Fair price guaranteed
+          </span>
         </div>
 
-        <div className="border-2 border-black p-3 bg-neutral-50">
-          <div className="text-xs font-mono uppercase text-neutral-600">Lowest Competitor</div>
-          <div className="text-2xl font-black font-mono mt-1 text-neutral-700">
+        <div className="bg-slate-50 rounded-xl p-4 border border-slate-100">
+          <span className="text-[11px] font-semibold text-slate-400 block uppercase tracking-wider">
+            Lowest Competitor
+          </span>
+          <span className="text-2xl font-black text-slate-900 tracking-tight mt-1 block">
             ${lowest.toFixed(2)}
-          </div>
+          </span>
+          <span className="text-[11px] text-slate-500 mt-0.5 block">
+            Across tracked stores
+          </span>
         </div>
 
-        <div className={`border-2 border-black p-3 ${isCheaper ? 'bg-green-400' : 'bg-yellow-300'}`}>
-          <div className="text-xs font-mono uppercase text-black font-bold">
-            {isCheaper ? 'Customer Advantage' : 'Market Variance'}
+        <div className={`rounded-xl p-4 border ${
+          isCheaper ? 'bg-emerald-50/70 border-emerald-200/60' : 'bg-slate-50 border-slate-100'
+        }`}>
+          <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 block">
+            Price Advantage
+          </span>
+          <div className="flex items-center gap-2 mt-1">
+            {isCheaper ? (
+              <TrendingDown size={22} className="text-emerald-600" />
+            ) : (
+              <TrendingUp size={22} className="text-amber-600" />
+            )}
+            <span className={`text-2xl font-black tracking-tight ${
+              isCheaper ? 'text-emerald-700' : 'text-slate-900'
+            }`}>
+              {isCheaper ? `-${savingsPct}%` : 'Fair'}
+            </span>
           </div>
-          <div className="text-2xl font-black font-mono mt-1 flex items-center gap-1 text-black">
-            {isCheaper ? <TrendingDown size={22} /> : <TrendingUp size={22} />}
-            <span>{isCheaper ? `Save ${savingsPct}%` : `+${savingsPct}%`}</span>
-          </div>
+          <span className={`text-[11px] font-medium mt-0.5 block ${
+            isCheaper ? 'text-emerald-700' : 'text-slate-500'
+          }`}>
+            {isCheaper ? `You save $${priceDifference.toFixed(2)} with Kroma` : 'Competitively matched'}
+          </span>
         </div>
       </div>
 
-      <div>
-        <div className="text-xs font-bold font-mono uppercase mb-2 flex items-center gap-1">
-          <Clock size={12} />
-          <span>Historical Competitor Snapshots</span>
+      {/* Historical Records Table */}
+      <div className="border border-slate-200/80 rounded-xl overflow-hidden">
+        <div className="bg-slate-50 px-4 py-2.5 border-b border-slate-200/80 flex justify-between items-center text-xs font-semibold text-slate-600">
+          <span>Tracked Competitor Snapshots</span>
+          <span>{comparison.records.length} records active</span>
         </div>
-        <div className="border-2 border-black divide-y-2 divide-black">
-          {comparison.records.slice(0, 4).map((record) => (
-            <div
-              key={record.id}
-              className="p-3 flex justify-between items-center text-xs font-mono bg-white hover:bg-neutral-50"
-            >
-              <div>
-                <div className="font-bold flex items-center gap-1">
-                  <span>{record.competitorName}</span>
-                  <a
-                    href={record.competitorUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="hover:underline text-blue-600"
+        <div className="divide-y divide-slate-100">
+          {comparison.records.map((rec) => {
+            const diff = ourPrice - rec.price;
+            const diffPct = Math.round((Math.abs(diff) / rec.price) * 100);
+            return (
+              <div
+                key={rec.id}
+                className="px-4 py-3 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 hover:bg-slate-50/50 transition-colors"
+              >
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="font-semibold text-slate-900 text-sm">
+                      {rec.competitorName}
+                    </span>
+                    <a
+                      href={rec.competitorUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-slate-400 hover:text-indigo-600 transition-colors"
+                      title="Inspect Competitor Target"
+                    >
+                      <ExternalLink size={12} />
+                    </a>
+                  </div>
+                  <span className="text-[11px] text-slate-400 flex items-center gap-1 mt-0.5">
+                    <Clock size={11} />
+                    Scraped {new Date(rec.createdAt).toLocaleDateString()}
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-4">
+                  <span className="text-sm font-bold text-slate-700">
+                    ${rec.price.toFixed(2)}
+                  </span>
+                  <span
+                    className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${
+                      rec.price > ourPrice
+                        ? 'bg-emerald-100 text-emerald-800'
+                        : 'bg-amber-100 text-amber-800'
+                    }`}
                   >
-                    <ExternalLink size={12} />
-                  </a>
-                </div>
-                <div className="text-[11px] text-neutral-500">
-                  {new Date(record.createdAt).toLocaleDateString()} at{' '}
-                  {new Date(record.createdAt).toLocaleTimeString()}
+                    {rec.price > ourPrice
+                      ? `Our store is ${diffPct}% cheaper`
+                      : `Matched / Competitive`}
+                  </span>
                 </div>
               </div>
-
-              <div className="text-right">
-                <div className="font-black text-sm">${record.price.toFixed(2)}</div>
-                <div
-                  className={`text-[11px] font-bold ${
-                    record.price > ourPrice ? 'text-green-700' : 'text-neutral-600'
-                  }`}
-                >
-                  {record.price > ourPrice
-                    ? `+$${(record.price - ourPrice).toFixed(2)} higher`
-                    : `-$${(ourPrice - record.price).toFixed(2)} lower`}
-                </div>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
-      </div>
-
-      <div className="mt-3 flex items-center gap-1.5 text-[11px] font-mono text-neutral-600">
-        <ShieldCheck size={14} />
-        <span>Verified by autonomous Playwright headless browser crawler</span>
       </div>
     </div>
   );

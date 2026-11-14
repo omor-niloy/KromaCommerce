@@ -16,7 +16,8 @@ import {
   AlertTriangle,
   Lock,
   Package,
-  User as UserIcon
+  User as UserIcon,
+  CheckCircle2
 } from 'lucide-react';
 import { useCartStore } from '../store/cart-store';
 import { useAuthStore } from '../store/auth-store';
@@ -101,427 +102,372 @@ export const CartDrawer: React.FC = () => {
     setStep('payment');
   };
 
-  const handleCreatePendingOrder = async () => {
-    if (!user) {
-      setOpen(false);
-      openAuthModal();
-      return;
-    }
-
-    if (items.length === 0) return;
+  const handlePlacePendingOrder = async () => {
+    setCheckingOut(true);
+    setErrorMsg(null);
 
     try {
-      setCheckingOut(true);
-      setErrorMsg(null);
+      const fullAddressString = `${shippingAddress.fullName}, ${shippingAddress.streetAddress}, ${shippingAddress.city}, ${shippingAddress.state} ${shippingAddress.postalCode}, ${shippingAddress.country}`;
 
-      const orderItems = items.map((i) => ({
-        productId: i.product.id,
-        quantity: i.quantity
-      }));
-
-      const formattedAddress = `${shippingAddress.fullName}, ${shippingAddress.streetAddress}, ${shippingAddress.city}, ${shippingAddress.state} ${shippingAddress.postalCode}, ${shippingAddress.country}`;
-
-      // Create order with shipping address in PENDING status (not paid directly)
-      const order = await apiClient.createOrder(orderItems, formattedAddress);
+      const res = await apiClient.createOrder(
+        items.map((i) => ({ productId: i.product.id, quantity: i.quantity })),
+        fullAddressString
+      );
 
       clearCart();
       setOpen(false);
-      setStep('cart');
-
-      // Navigate to order confirmation showing PENDING status and gateway down notice
-      router.push(`/order/success?order_id=${order.id}&status=PENDING`);
+      router.push(`/order/success?order_id=${res.id}&status=${res.status}`);
     } catch (err) {
-      setErrorMsg(err instanceof Error ? err.message : 'Order creation failed');
-    } finally {
+      setErrorMsg(err instanceof Error ? err.message : 'Failed to record order. Please try again.');
       setCheckingOut(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 z-50 overflow-hidden bg-black/60 flex justify-end">
-      <div className="w-full max-w-md bg-white border-l-2 border-black flex flex-col h-full shadow-2xl">
-        {/* Header */}
-        <div className="p-4 border-b-2 border-black flex justify-between items-center bg-black text-white">
+    <div className="fixed inset-0 z-50 flex justify-end">
+      {/* Backdrop */}
+      <div
+        onClick={() => setOpen(false)}
+        className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs transition-opacity"
+      />
+
+      {/* Drawer Container */}
+      <div className="relative w-full max-w-md bg-white h-full shadow-2xl flex flex-col z-10 animate-in slide-in-from-right duration-200">
+        {/* Drawer Header */}
+        <div className="p-4 sm:p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
           <div className="flex items-center gap-2">
-            {step === 'cart' && <ShoppingBag size={18} />}
-            {step === 'shipping' && <MapPin size={18} />}
-            {step === 'payment' && <CreditCard size={18} />}
-            <span className="font-black tracking-wider uppercase text-sm font-mono">
-              {step === 'cart' && `Your Cart (${items.length})`}
-              {step === 'shipping' && 'Shipping Address'}
-              {step === 'payment' && 'Payment Options'}
-            </span>
+            <ShoppingBag size={20} className="text-indigo-600" />
+            <h2 className="font-bold text-slate-900 text-base">Your Cart ({items.length})</h2>
           </div>
           <button
             onClick={() => setOpen(false)}
-            className="p-1 hover:bg-neutral-800"
-            aria-label="Close cart drawer"
+            className="p-1.5 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
           >
             <X size={18} />
           </button>
         </div>
 
-        {/* Progress indicator */}
-        <div className="grid grid-cols-3 border-b-2 border-black font-mono text-[10px] font-bold uppercase text-center bg-neutral-100">
-          <button
-            type="button"
-            onClick={() => setStep('cart')}
-            className={`py-2 border-r border-black ${
-              step === 'cart' ? 'bg-black text-white' : 'hover:bg-neutral-200'
-            }`}
-          >
-            1. Cart
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              if (user && items.length > 0) setStep('shipping');
-            }}
-            className={`py-2 border-r border-black ${
-              step === 'shipping' ? 'bg-black text-white' : 'hover:bg-neutral-200'
-            }`}
-          >
-            2. Shipping
-          </button>
-          <button
-            type="button"
-            disabled={!shippingAddress.streetAddress}
-            onClick={() => {
-              if (shippingAddress.streetAddress) setStep('payment');
-            }}
-            className={`py-2 ${
-              step === 'payment' ? 'bg-black text-white' : 'hover:bg-neutral-200 disabled:opacity-40'
-            }`}
-          >
-            3. Payment
-          </button>
+        {/* 3-Step Progress Indicator */}
+        <div className="px-5 py-3 bg-slate-50 border-b border-slate-100 flex items-center justify-between text-xs">
+          <div className={`flex items-center gap-1.5 font-semibold ${
+            step === 'cart' ? 'text-indigo-600' : 'text-slate-700'
+          }`}>
+            <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] ${
+              step === 'cart' ? 'bg-indigo-600 text-white' : 'bg-slate-200 text-slate-700'
+            }`}>1</span>
+            <span>Items</span>
+          </div>
+          <span className="text-slate-300">›</span>
+          <div className={`flex items-center gap-1.5 font-semibold ${
+            step === 'shipping' ? 'text-indigo-600' : step === 'payment' ? 'text-slate-700' : 'text-slate-400'
+          }`}>
+            <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] ${
+              step === 'shipping' ? 'bg-indigo-600 text-white' : step === 'payment' ? 'bg-slate-200 text-slate-700' : 'bg-slate-200 text-slate-400'
+            }`}>2</span>
+            <span>Shipping</span>
+          </div>
+          <span className="text-slate-300">›</span>
+          <div className={`flex items-center gap-1.5 font-semibold ${
+            step === 'payment' ? 'text-indigo-600' : 'text-slate-400'
+          }`}>
+            <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] ${
+              step === 'payment' ? 'bg-indigo-600 text-white' : 'bg-slate-200 text-slate-400'
+            }`}>3</span>
+            <span>Payment</span>
+          </div>
         </div>
 
+        {/* Error Banner */}
         {errorMsg && (
-          <div className="bg-red-500 text-white p-3 text-xs font-mono border-b-2 border-black">
-            {errorMsg}
+          <div className="mx-4 mt-4 p-3 bg-rose-50 border border-rose-200 rounded-xl text-rose-700 text-xs flex items-center gap-2">
+            <AlertTriangle size={15} className="shrink-0 text-rose-600" />
+            <span>{errorMsg}</span>
           </div>
         )}
 
-        {/* STEP 1: CART ITEMS */}
-        {step === 'cart' && (
-          <>
-            <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        {/* Drawer Content */}
+        <div className="flex-1 overflow-y-auto p-5">
+          {/* STEP 1: CART ITEMS */}
+          {step === 'cart' && (
+            <div>
               {items.length === 0 ? (
-                <div className="text-center py-12 text-neutral-500 font-mono text-sm">
-                  <ShoppingBag size={48} className="mx-auto mb-3 text-neutral-400" />
-                  <p>Your shopping cart is currently empty.</p>
+                <div className="text-center py-16">
+                  <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-4 text-slate-400">
+                    <ShoppingBag size={28} />
+                  </div>
+                  <h3 className="font-bold text-slate-800 text-base mb-1">Your cart is empty</h3>
+                  <p className="text-xs text-slate-500 mb-6">Explore our catalog to find verified fair prices.</p>
+                  <button
+                    onClick={() => setOpen(false)}
+                    className="bg-slate-900 hover:bg-slate-800 text-white px-5 py-2.5 rounded-full text-xs font-semibold shadow-sm transition-colors"
+                  >
+                    Start Shopping
+                  </button>
                 </div>
               ) : (
-                items.map((item) => (
-                  <div
-                    key={item.product.id}
-                    className="border-2 border-black p-3 flex gap-3 bg-white"
-                  >
-                    <div className="relative w-20 h-20 border border-black bg-neutral-100 flex-shrink-0">
-                      <Image
-                        src={item.product.imageUrl}
-                        alt={item.product.name}
-                        fill
-                        sizes="80px"
-                        className="object-cover"
-                      />
-                    </div>
-
-                    <div className="flex-1 flex flex-col justify-between">
-                      <div>
-                        <h4 className="font-bold text-xs line-clamp-1">{item.product.name}</h4>
-                        <div className="text-sm font-black font-mono mt-1">
-                          ${item.product.price.toFixed(2)}
-                        </div>
+                <div className="space-y-4">
+                  {items.map((item) => (
+                    <div
+                      key={item.product.id}
+                      className="flex gap-3 p-3 bg-slate-50/70 border border-slate-100 rounded-xl"
+                    >
+                      <div className="relative w-18 h-18 rounded-lg overflow-hidden bg-slate-200 shrink-0">
+                        <Image
+                          src={item.product.imageUrl}
+                          alt={item.product.name}
+                          fill
+                          className="object-cover"
+                        />
                       </div>
-
-                      <div className="flex justify-between items-center mt-2">
-                        <div className="flex items-center border border-black">
+                      <div className="flex-1 flex flex-col justify-between">
+                        <div className="flex justify-between items-start gap-2">
+                          <h4 className="font-semibold text-slate-900 text-xs line-clamp-2">
+                            {item.product.name}
+                          </h4>
                           <button
-                            onClick={() => updateQuantity(item.product.id, item.quantity - 1)}
-                            className="px-2 py-0.5 hover:bg-neutral-200"
-                            aria-label="Decrease quantity"
+                            onClick={() => removeItem(item.product.id)}
+                            className="text-slate-400 hover:text-rose-500 p-1 transition-colors"
+                            title="Remove"
                           >
-                            <Minus size={12} />
+                            <Trash2 size={14} />
                           </button>
-                          <span className="px-2 text-xs font-mono font-bold">
-                            {item.quantity}
+                        </div>
+                        <div className="flex justify-between items-center mt-2">
+                          <span className="font-bold text-sm text-slate-900">
+                            ${(item.product.price * item.quantity).toFixed(2)}
                           </span>
-                          <button
-                            onClick={() => updateQuantity(item.product.id, item.quantity + 1)}
-                            className="px-2 py-0.5 hover:bg-neutral-200"
-                            aria-label="Increase quantity"
-                          >
-                            <Plus size={12} />
-                          </button>
+                          <div className="flex items-center gap-1 bg-white border border-slate-200 rounded-lg p-0.5 shadow-2xs">
+                            <button
+                              onClick={() => updateQuantity(item.product.id, item.quantity - 1)}
+                              className="p-1 hover:bg-slate-100 rounded text-slate-600"
+                            >
+                              <Minus size={12} />
+                            </button>
+                            <span className="text-xs font-bold px-2 text-slate-800">
+                              {item.quantity}
+                            </span>
+                            <button
+                              onClick={() => updateQuantity(item.product.id, item.quantity + 1)}
+                              className="p-1 hover:bg-slate-100 rounded text-slate-600"
+                            >
+                              <Plus size={12} />
+                            </button>
+                          </div>
                         </div>
-
-                        <button
-                          onClick={() => removeItem(item.product.id)}
-                          className="text-neutral-500 hover:text-black p-1"
-                          aria-label="Remove item"
-                        >
-                          <Trash2 size={14} />
-                        </button>
                       </div>
                     </div>
-                  </div>
-                ))
+                  ))}
+                </div>
               )}
             </div>
+          )}
 
-            {items.length > 0 && (
-              <div className="border-t-2 border-black p-4 bg-neutral-50 font-mono">
-                <div className="space-y-1.5 mb-4 text-xs">
-                  <div className="flex justify-between">
-                    <span>Subtotal</span>
-                    <span className="font-bold">${total.toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between text-neutral-600">
-                    <span>Estimated Shipping</span>
-                    <span className="font-bold">FREE</span>
-                  </div>
-                  <div className="border-t border-black pt-2 flex justify-between text-base font-black">
-                    <span>Total</span>
-                    <span>${total.toFixed(2)} USD</span>
-                  </div>
-                </div>
-
-                <button
-                  onClick={handleStartCheckout}
-                  disabled={checkingOut}
-                  className="w-full bg-black text-white border-2 border-black py-3 px-4 font-bold text-xs uppercase flex items-center justify-center gap-2 hover:bg-neutral-800 disabled:opacity-50"
-                >
-                  <MapPin size={16} />
-                  <span>
-                    {user ? 'Proceed to Shipping Address' : 'Sign In to Checkout'}
-                  </span>
-                  <ArrowRight size={14} />
-                </button>
-              </div>
-            )}
-          </>
-        )}
-
-        {/* STEP 2: SHIPPING ADDRESS FORM */}
-        {step === 'shipping' && (
-          <form onSubmit={handleValidateShipping} className="flex-1 flex flex-col justify-between overflow-hidden">
-            <div className="flex-1 overflow-y-auto p-4 space-y-3 font-mono text-xs">
-              <div className="bg-neutral-100 p-2.5 border border-black text-[11px] flex items-center gap-1.5">
-                <MapPin size={14} className="flex-shrink-0" />
-                <span>Enter your delivery address to proceed with order fulfillment.</span>
+          {/* STEP 2: SHIPPING ADDRESS */}
+          {step === 'shipping' && (
+            <form id="shipping-form" onSubmit={handleValidateShipping} className="space-y-3.5">
+              <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-700 mb-2">
+                <MapPin size={15} className="text-indigo-600" />
+                <span>Shipping Address</span>
               </div>
 
               <div>
-                <label className="block font-bold uppercase mb-1 text-[11px]">Recipient Full Name *</label>
-                <div className="relative">
-                  <input
-                    type="text"
-                    required
-                    value={shippingAddress.fullName}
-                    onChange={(e) => setShippingAddress({ ...shippingAddress, fullName: e.target.value })}
-                    placeholder="e.g. John Doe"
-                    className="w-full border-2 border-black p-2 text-xs focus:outline-none"
-                  />
-                  <UserIcon size={14} className="absolute right-3 top-2.5 text-neutral-400" />
-                </div>
-              </div>
-
-              <div>
-                <label className="block font-bold uppercase mb-1 text-[11px]">Street Address *</label>
+                <label className="block text-[11px] font-semibold text-slate-600 mb-1">Full Name</label>
                 <input
                   type="text"
                   required
-                  value={shippingAddress.streetAddress}
-                  onChange={(e) => setShippingAddress({ ...shippingAddress, streetAddress: e.target.value })}
-                  placeholder="e.g. 742 Evergreen Terrace, Apt 4B"
-                  className="w-full border-2 border-black p-2 text-xs focus:outline-none"
+                  placeholder="e.g. Alex Johnson"
+                  value={shippingAddress.fullName}
+                  onChange={(e) => setShippingAddress({ ...shippingAddress, fullName: e.target.value })}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all"
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-2">
+              <div>
+                <label className="block text-[11px] font-semibold text-slate-600 mb-1">Street Address</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. 742 Evergreen Terrace"
+                  value={shippingAddress.streetAddress}
+                  onChange={(e) => setShippingAddress({ ...shippingAddress, streetAddress: e.target.value })}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-2.5">
                 <div>
-                  <label className="block font-bold uppercase mb-1 text-[11px]">City *</label>
+                  <label className="block text-[11px] font-semibold text-slate-600 mb-1">City</label>
                   <input
                     type="text"
                     required
+                    placeholder="Springfield"
                     value={shippingAddress.city}
                     onChange={(e) => setShippingAddress({ ...shippingAddress, city: e.target.value })}
-                    placeholder="e.g. Springfield"
-                    className="w-full border-2 border-black p-2 text-xs focus:outline-none"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all"
                   />
                 </div>
                 <div>
-                  <label className="block font-bold uppercase mb-1 text-[11px]">State / Province *</label>
+                  <label className="block text-[11px] font-semibold text-slate-600 mb-1">State / Province</label>
                   <input
                     type="text"
                     required
+                    placeholder="OR"
                     value={shippingAddress.state}
                     onChange={(e) => setShippingAddress({ ...shippingAddress, state: e.target.value })}
-                    placeholder="e.g. OR"
-                    className="w-full border-2 border-black p-2 text-xs focus:outline-none"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all"
                   />
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-2 gap-2.5">
                 <div>
-                  <label className="block font-bold uppercase mb-1 text-[11px]">Postal / ZIP Code *</label>
+                  <label className="block text-[11px] font-semibold text-slate-600 mb-1">Postal / ZIP</label>
                   <input
                     type="text"
                     required
+                    placeholder="97477"
                     value={shippingAddress.postalCode}
                     onChange={(e) => setShippingAddress({ ...shippingAddress, postalCode: e.target.value })}
-                    placeholder="e.g. 97477"
-                    className="w-full border-2 border-black p-2 text-xs focus:outline-none"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all"
                   />
                 </div>
                 <div>
-                  <label className="block font-bold uppercase mb-1 text-[11px]">Country *</label>
+                  <label className="block text-[11px] font-semibold text-slate-600 mb-1">Country</label>
                   <input
                     type="text"
                     required
                     value={shippingAddress.country}
                     onChange={(e) => setShippingAddress({ ...shippingAddress, country: e.target.value })}
-                    className="w-full border-2 border-black p-2 text-xs focus:outline-none"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all"
                   />
                 </div>
               </div>
+            </form>
+          )}
 
-              <div className="pt-2 text-[11px] text-neutral-500">
-                Order Total: <span className="font-bold text-black">${total.toFixed(2)} USD</span> (Free shipping)
-              </div>
-            </div>
-
-            <div className="border-t-2 border-black p-4 bg-neutral-50 space-y-2 font-mono">
-              <button
-                type="submit"
-                className="w-full bg-black text-white border-2 border-black py-3 px-4 font-bold text-xs uppercase flex items-center justify-center gap-2 hover:bg-neutral-800"
-              >
-                <CreditCard size={16} />
-                <span>Proceed to Payment</span>
-                <ArrowRight size={14} />
-              </button>
-              <button
-                type="button"
-                onClick={() => setStep('cart')}
-                className="w-full bg-white text-black border-2 border-black py-2.5 px-4 font-bold text-xs uppercase flex items-center justify-center gap-1.5 hover:bg-neutral-100"
-              >
-                <ArrowLeft size={14} />
-                <span>Back to Cart</span>
-              </button>
-            </div>
-          </form>
-        )}
-
-        {/* STEP 3: PAYMENT METHOD (GATEWAY DOWN NOTICE) */}
-        {step === 'payment' && (
-          <div className="flex-1 flex flex-col justify-between overflow-hidden">
-            <div className="flex-1 overflow-y-auto p-4 space-y-4 font-mono text-xs">
-              {/* Shipping Destination summary */}
-              <div className="border-2 border-black p-3 bg-neutral-50">
-                <div className="flex justify-between items-center mb-1.5 border-b border-black pb-1">
-                  <div className="flex items-center gap-1.5 font-bold uppercase text-[11px]">
-                    <MapPin size={12} />
-                    <span>Shipping Destination</span>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setStep('shipping')}
-                    className="text-black underline font-bold text-[10px] uppercase"
-                  >
-                    Edit
-                  </button>
-                </div>
-                <div className="font-bold text-xs">{shippingAddress.fullName}</div>
-                <div className="text-neutral-700">{shippingAddress.streetAddress}</div>
-                <div className="text-neutral-700">
-                  {shippingAddress.city}, {shippingAddress.state} {shippingAddress.postalCode}
-                </div>
-                <div className="text-neutral-700">{shippingAddress.country}</div>
+          {/* STEP 3: PAYMENT REVIEW (OFFLINE BANNER) */}
+          {step === 'payment' && (
+            <div className="space-y-4">
+              <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-700 mb-1">
+                <CreditCard size={15} className="text-indigo-600" />
+                <span>Payment Options</span>
               </div>
 
-              {/* Payment Option */}
-              <div className="border-2 border-black p-3 bg-white">
-                <div className="flex justify-between items-center mb-1">
-                  <div className="flex items-center gap-2 font-bold uppercase text-xs">
-                    <CreditCard size={16} />
-                    <span>Credit / Debit Card</span>
-                  </div>
-                  <span className="bg-red-500 text-white font-bold text-[10px] px-2 py-0.5 border border-black uppercase">
-                    Unavailable
-                  </span>
-                </div>
-                <p className="text-[11px] text-neutral-600">
-                  Automated online card clearance via payment gateway.
-                </p>
-              </div>
-
-              {/* PAYMENT GATEWAY CURRENTLY DOWN ALERT BANNER */}
-              <div className="border-2 border-black bg-red-500 text-white p-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] space-y-2">
-                <div className="flex items-center gap-2 font-black uppercase text-xs">
-                  <AlertTriangle size={18} className="flex-shrink-0" />
+              {/* Prominent Payment Gateway Notice Banner */}
+              <div className="p-4 bg-amber-50 border border-amber-200/90 rounded-2xl text-amber-900 shadow-xs">
+                <div className="flex items-center gap-2 mb-1.5 font-bold text-xs uppercase tracking-wider text-amber-800">
+                  <AlertTriangle size={16} className="text-amber-600 shrink-0" />
                   <span>Payment Gateway Currently Down</span>
                 </div>
-                <p className="text-xs leading-relaxed text-white">
-                  Notice: Our online payment gateway is currently down for maintenance. We cannot process direct card payments at this time.
+                <p className="text-xs text-amber-700 leading-relaxed mb-3">
+                  Our credit card processing provider is currently in scheduled maintenance. You will
+                  <span className="font-bold text-amber-900"> Not Paid Directly</span>. Your order will be securely recorded in 
+                  <span className="font-bold text-amber-900"> PENDING</span> status.
                 </p>
-                <div className="bg-black text-white px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider inline-block border border-white/20">
-                  Not Paid Directly
-                </div>
+
+                <button
+                  type="button"
+                  disabled
+                  className="w-full bg-amber-200/50 text-amber-900 border border-amber-300 py-2 px-3 rounded-xl text-xs font-bold uppercase cursor-not-allowed opacity-60 flex items-center justify-center gap-1.5"
+                >
+                  <Lock size={12} />
+                  <span>Payment Gateway Currently Down</span>
+                </button>
               </div>
 
-              {/* Order total ledger */}
-              <div className="border-2 border-black p-3 bg-neutral-100 space-y-1">
-                <div className="flex justify-between">
-                  <span>Order Items ({items.length}):</span>
-                  <span className="font-bold">${total.toFixed(2)}</span>
+              {/* Order Summary Recap */}
+              <div className="bg-slate-50 rounded-xl p-4 border border-slate-100 space-y-2.5">
+                <div className="flex justify-between text-xs text-slate-600">
+                  <span>Ship To:</span>
+                  <span className="font-semibold text-slate-800 text-right truncate max-w-[200px]">
+                    {shippingAddress.fullName}
+                  </span>
                 </div>
-                <div className="flex justify-between text-neutral-600">
-                  <span>Shipping:</span>
-                  <span className="font-bold">FREE</span>
+                <div className="flex justify-between text-xs text-slate-600">
+                  <span>Address:</span>
+                  <span className="font-medium text-slate-700 text-right truncate max-w-[200px]">
+                    {shippingAddress.streetAddress}, {shippingAddress.city}
+                  </span>
                 </div>
-                <div className="border-t border-black pt-1 flex justify-between font-black text-sm">
-                  <span>Total Amount Due:</span>
-                  <span>${total.toFixed(2)} USD</span>
+                <div className="pt-2 border-t border-slate-200 flex justify-between items-baseline">
+                  <span className="font-semibold text-slate-700 text-xs">Total Amount:</span>
+                  <span className="font-black text-xl text-slate-900">${total.toFixed(2)}</span>
                 </div>
               </div>
             </div>
+          )}
+        </div>
 
-            {/* Bottom Actions */}
-            <div className="border-t-2 border-black p-4 bg-neutral-50 space-y-2 font-mono">
-              {/* Disabled direct payment button */}
-              <button
-                type="button"
-                disabled
-                className="w-full bg-neutral-300 text-neutral-600 border-2 border-black py-3 px-4 font-bold text-xs uppercase cursor-not-allowed flex items-center justify-center gap-2"
-              >
-                <Lock size={14} />
-                <span>Payment Gateway Currently Down</span>
-              </button>
+        {/* Drawer Footer / Action Buttons */}
+        {items.length > 0 && (
+          <div className="p-5 border-t border-slate-100 bg-slate-50/50 space-y-3">
+            {step === 'cart' && (
+              <>
+                <div className="flex justify-between items-baseline mb-1">
+                  <span className="text-xs font-semibold text-slate-500">Order Subtotal:</span>
+                  <span className="text-xl font-black text-slate-900">${total.toFixed(2)}</span>
+                </div>
+                <button
+                  onClick={handleStartCheckout}
+                  className="w-full bg-slate-900 hover:bg-slate-800 text-white py-3 px-4 rounded-xl font-semibold text-xs flex items-center justify-center gap-2 shadow-sm transition-all"
+                >
+                  <span>Proceed to Shipping Address</span>
+                  <ArrowRight size={14} />
+                </button>
+              </>
+            )}
 
-              {/* Place Order as Pending (Not Paid Directly) */}
-              <button
-                type="button"
-                onClick={handleCreatePendingOrder}
-                disabled={checkingOut}
-                className="w-full bg-black text-white border-2 border-black py-3 px-4 font-bold text-xs uppercase flex items-center justify-center gap-2 hover:bg-neutral-800 disabled:opacity-50"
-              >
-                <Package size={16} />
-                <span>{checkingOut ? 'Submitting Order...' : 'Place Order (Payment Pending)'}</span>
-                <ArrowRight size={14} />
-              </button>
+            {step === 'shipping' && (
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setStep('cart')}
+                  className="w-1/3 bg-slate-200 hover:bg-slate-300 text-slate-700 py-3 px-3 rounded-xl font-semibold text-xs flex items-center justify-center gap-1.5 transition-colors"
+                >
+                  <ArrowLeft size={14} />
+                  <span>Back</span>
+                </button>
+                <button
+                  type="submit"
+                  form="shipping-form"
+                  className="w-2/3 bg-slate-900 hover:bg-slate-800 text-white py-3 px-4 rounded-xl font-semibold text-xs flex items-center justify-center gap-2 shadow-sm transition-all"
+                >
+                  <span>Proceed to Payment</span>
+                  <ArrowRight size={14} />
+                </button>
+              </div>
+            )}
 
-              <button
-                type="button"
-                onClick={() => setStep('shipping')}
-                className="w-full bg-white text-black border-2 border-black py-2.5 px-4 font-bold text-xs uppercase flex items-center justify-center gap-1.5 hover:bg-neutral-100"
-              >
-                <ArrowLeft size={14} />
-                <span>Back to Shipping Address</span>
-              </button>
-            </div>
+            {step === 'payment' && (
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setStep('shipping')}
+                  className="w-1/3 bg-slate-200 hover:bg-slate-300 text-slate-700 py-3 px-3 rounded-xl font-semibold text-xs flex items-center justify-center gap-1.5 transition-colors"
+                >
+                  <ArrowLeft size={14} />
+                  <span>Back</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={handlePlacePendingOrder}
+                  disabled={checkingOut}
+                  className="w-2/3 bg-indigo-600 hover:bg-indigo-700 text-white py-3 px-4 rounded-xl font-bold text-xs flex items-center justify-center gap-2 shadow-sm transition-all disabled:opacity-50"
+                >
+                  {checkingOut ? (
+                    <>
+                      <span className="animate-spin rounded-full h-3.5 w-3.5 border-b-2 border-white"></span>
+                      <span>Recording Order...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Package size={14} />
+                      <span>Place Order (Payment Pending)</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>

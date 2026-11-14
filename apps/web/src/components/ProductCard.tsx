@@ -19,69 +19,85 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const isOurPriceLower = hasCompetitor && competitorRecord.price > product.price;
 
   return (
-    <div className="border-2 border-black bg-white flex flex-col justify-between hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all">
-      <Link href={`/products/${product.slug}`} className="block relative aspect-square border-b-2 border-black bg-neutral-100 overflow-hidden group">
+    <div className="bg-white rounded-2xl border border-slate-200/80 overflow-hidden shadow-xs hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between group">
+      {/* Product Image */}
+      <Link
+        href={`/products/${product.slug}`}
+        className="block relative aspect-square bg-slate-100 overflow-hidden"
+      >
         <Image
           src={product.imageUrl}
           alt={product.name}
           fill
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-          className="object-cover group-hover:scale-105 transition-transform duration-200"
+          className="object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
         />
+
+        {/* Savings Badge */}
         {hasCompetitor && isOurPriceLower && (
-          <div className="absolute top-2 left-2 bg-green-500 text-black px-2 py-1 text-xs font-bold font-mono border-2 border-black flex items-center gap-1">
-            <TrendingDown size={14} />
+          <div className="absolute top-3 left-3 bg-emerald-600 text-white px-2.5 py-1 rounded-full text-xs font-semibold flex items-center gap-1 shadow-md">
+            <TrendingDown size={13} />
             <span>SAVE {Math.abs(competitorRecord.differencePercentage)}%</span>
           </div>
         )}
+
+        {/* Stock Status Pill */}
+        <div className="absolute bottom-3 right-3 bg-white/90 backdrop-blur-xs text-slate-700 px-2 py-0.5 rounded-md text-[11px] font-medium border border-slate-200/50 shadow-xs">
+          {product.inventoryCount} in stock
+        </div>
       </Link>
 
-      <div className="p-4 flex-1 flex flex-col justify-between">
+      {/* Card Body */}
+      <div className="p-5 flex-1 flex flex-col justify-between">
         <div>
-          <div className="text-xs font-mono uppercase text-neutral-600 mb-1">
+          <span className="text-[11px] font-bold uppercase tracking-wider text-indigo-600 mb-1.5 block">
             {product.category?.name || 'Category'}
-          </div>
+          </span>
           <Link href={`/products/${product.slug}`}>
-            <h3 className="font-bold text-sm line-clamp-2 hover:underline mb-2">
+            <h3 className="font-semibold text-slate-900 text-base line-clamp-2 hover:text-indigo-600 transition-colors mb-2">
               {product.name}
             </h3>
           </Link>
+          <p className="text-xs text-slate-500 line-clamp-2 leading-relaxed mb-4">
+            {product.description}
+          </p>
         </div>
 
-        <div className="mt-4 pt-3 border-t border-black">
-          <div className="flex justify-between items-baseline mb-3">
+        {/* Pricing & Actions */}
+        <div className="pt-4 border-t border-slate-100">
+          <div className="flex justify-between items-baseline mb-4">
             <div>
-              <div className="text-xs font-mono text-neutral-600">Our Price</div>
-              <div className="text-xl font-black font-mono">
+              <span className="text-[11px] font-medium text-slate-400 block">Our Verified Price</span>
+              <span className="text-2xl font-black text-slate-900 tracking-tight">
                 ${product.price.toFixed(2)}
-              </div>
+              </span>
             </div>
 
             {hasCompetitor && (
               <div className="text-right">
-                <div className="text-xs font-mono text-neutral-600">
-                  {competitorRecord.competitorName.substring(0, 12)}
-                </div>
-                <div className="text-sm line-through font-mono text-neutral-500">
+                <span className="text-[11px] font-medium text-slate-400 block truncate max-w-[120px]">
+                  {competitorRecord.competitorName}
+                </span>
+                <span className="text-sm line-through text-slate-400 font-semibold">
                   ${competitorRecord.price.toFixed(2)}
-                </div>
+                </span>
               </div>
             )}
           </div>
 
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-2 gap-2.5">
             <Link
               href={`/products/${product.slug}`}
-              className="border-2 border-black py-2 px-3 text-xs font-bold uppercase text-center hover:bg-neutral-100 flex items-center justify-center gap-1"
+              className="py-2.5 px-3 rounded-xl text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 flex items-center justify-center gap-1.5 transition-colors"
             >
               <span>Details</span>
-              <ArrowUpRight size={12} />
+              <ArrowUpRight size={13} />
             </Link>
             <button
               onClick={() => addItem(product)}
-              className="bg-black text-white border-2 border-black py-2 px-3 text-xs font-bold uppercase hover:bg-neutral-800 flex items-center justify-center gap-1.5"
+              className="py-2.5 px-3 rounded-xl text-xs font-semibold text-white bg-slate-900 hover:bg-slate-800 flex items-center justify-center gap-1.5 shadow-sm transition-all hover:shadow"
             >
-              <ShoppingCart size={14} />
+              <ShoppingCart size={13} />
               <span>Add</span>
             </button>
           </div>

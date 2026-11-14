@@ -13,7 +13,10 @@ import {
   RotateCcw,
   RefreshCw,
   Plus,
-  Minus
+  Minus,
+  CheckCircle2,
+  TrendingDown,
+  Sparkles
 } from 'lucide-react';
 import { Product } from '../../../types';
 import { apiClient } from '../../../lib/api-client';
@@ -50,21 +53,21 @@ export default function ProductDetailPage() {
 
   if (loading) {
     return (
-      <div className="border-2 border-black p-16 text-center font-mono text-sm flex items-center justify-center gap-2">
-        <RefreshCw size={20} className="animate-spin" />
-        <span>Loading product specifications...</span>
+      <div className="bg-white rounded-3xl border border-slate-200 p-20 text-center shadow-xs flex items-center justify-center gap-3">
+        <RefreshCw size={22} className="animate-spin text-indigo-600" />
+        <span className="text-sm font-semibold text-slate-600">Retrieving product specifications...</span>
       </div>
     );
   }
 
   if (errorMsg || !product) {
     return (
-      <div className="border-2 border-black p-12 text-center bg-white font-mono">
-        <h2 className="text-xl font-bold mb-2">Product Not Found</h2>
-        <p className="text-sm text-neutral-600 mb-6">{errorMsg || 'The requested product could not be located.'}</p>
+      <div className="bg-white rounded-3xl border border-slate-200 p-16 text-center max-w-lg mx-auto my-12 shadow-xs">
+        <h2 className="text-xl font-bold text-slate-900 mb-2">Product Not Found</h2>
+        <p className="text-xs text-slate-500 mb-6">{errorMsg || 'The requested product could not be located.'}</p>
         <Link
           href="/"
-          className="border-2 border-black bg-black text-white px-4 py-2 text-xs uppercase font-bold inline-flex items-center gap-1.5"
+          className="bg-slate-900 hover:bg-slate-800 text-white px-5 py-2.5 rounded-full text-xs font-semibold inline-flex items-center gap-2 transition-colors"
         >
           <ArrowLeft size={14} />
           <span>Return to Catalog</span>
@@ -73,18 +76,25 @@ export default function ProductDetailPage() {
     );
   }
 
+  const competitorRecord = product.competitorPriceRecords?.[0];
+  const hasCompetitor = competitorRecord !== undefined;
+  const isOurPriceLower = hasCompetitor && competitorRecord.price > product.price;
+
   return (
-    <div>
+    <div className="space-y-8">
+      {/* Back Link */}
       <Link
         href="/"
-        className="inline-flex items-center gap-1.5 text-xs font-mono font-bold uppercase mb-6 hover:underline"
+        className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-indigo-600 transition-colors"
       >
         <ArrowLeft size={14} />
         <span>Back to All Products</span>
       </Link>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
-        <div className="border-4 border-black bg-neutral-100 relative aspect-square shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]">
+      {/* Main Product Showcase */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-14 bg-white rounded-3xl border border-slate-200/80 p-6 sm:p-10 shadow-sm">
+        {/* Product Image Showcase */}
+        <div className="relative aspect-square rounded-2xl overflow-hidden bg-slate-100 border border-slate-200/60 shadow-xs">
           <Image
             src={product.imageUrl}
             alt={product.name}
@@ -93,95 +103,128 @@ export default function ProductDetailPage() {
             sizes="(max-width: 1024px) 100vw, 50vw"
             className="object-cover"
           />
+
+          {hasCompetitor && isOurPriceLower && (
+            <div className="absolute top-4 left-4 bg-emerald-600 text-white px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5 shadow-md">
+              <TrendingDown size={14} />
+              <span>SAVE {Math.abs(competitorRecord.differencePercentage)}% VS COMPETITORS</span>
+            </div>
+          )}
         </div>
 
-        <div>
-          <div className="text-xs font-mono uppercase bg-black text-white px-2 py-0.5 inline-block mb-3">
-            {product.category?.name || 'Hardware'}
-          </div>
+        {/* Product Details & Purchase Form */}
+        <div className="flex flex-col justify-between">
+          <div>
+            {/* Category & Stock Indicators */}
+            <div className="flex items-center gap-2.5 mb-3">
+              <span className="bg-indigo-50 text-indigo-700 border border-indigo-200/60 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">
+                {product.category?.name || 'Hardware'}
+              </span>
+              <span className="bg-emerald-50 text-emerald-700 border border-emerald-200/60 px-2.5 py-1 rounded-full text-xs font-semibold flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                <span>{product.inventoryCount} Available in Stock</span>
+              </span>
+            </div>
 
-          <h1 className="text-2xl md:text-3xl font-black uppercase tracking-tight mb-3">
-            {product.name}
-          </h1>
+            <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight leading-tight mb-4">
+              {product.name}
+            </h1>
 
-          <div className="border-y-2 border-black py-4 my-4 flex items-baseline justify-between">
-            <div>
-              <div className="text-xs font-mono text-neutral-600">Our Verified Fair Price</div>
-              <div className="text-3xl font-black font-mono mt-0.5">
-                ${product.price.toFixed(2)} USD
+            <p className="text-sm text-slate-600 leading-relaxed mb-6">
+              {product.description}
+            </p>
+
+            {/* Pricing Box */}
+            <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200/70 mb-6">
+              <div className="flex justify-between items-baseline">
+                <div>
+                  <span className="text-xs font-semibold text-slate-400 block mb-0.5">Verified Fair Price</span>
+                  <div className="flex items-baseline gap-3">
+                    <span className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight">
+                      ${product.price.toFixed(2)}
+                    </span>
+                    {hasCompetitor && (
+                      <span className="text-sm line-through text-slate-400 font-semibold">
+                        ${competitorRecord.price.toFixed(2)}
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {hasCompetitor && isOurPriceLower && (
+                  <div className="text-right">
+                    <span className="text-xs font-bold text-emerald-600 bg-emerald-50 border border-emerald-200/60 px-2.5 py-1 rounded-full block">
+                      ${(competitorRecord.price - product.price).toFixed(2)} cheaper than market
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
 
-            <div className="text-right">
-              <span className="text-xs font-mono font-bold px-2 py-1 bg-green-200 border border-black inline-flex items-center gap-1">
-                <Check size={12} />
-                <span>{product.inventoryCount > 0 ? `${product.inventoryCount} In Stock` : 'Out of Stock'}</span>
-              </span>
-            </div>
-          </div>
-
-          <p className="text-sm font-mono leading-relaxed text-neutral-800 mb-6">
-            {product.description}
-          </p>
-
-          <div className="border-2 border-black p-4 bg-neutral-50 mb-6">
-            <div className="text-xs font-mono uppercase font-bold mb-3">Select Quantity:</div>
-            <div className="flex items-center gap-4">
-              <div className="flex items-center border-2 border-black bg-white">
+            {/* Quantity Stepper & Add to Cart */}
+            <div className="flex flex-col sm:flex-row gap-4 mb-8">
+              <div className="flex items-center bg-slate-100 rounded-xl border border-slate-200 p-1 w-full sm:w-auto justify-between">
                 <button
                   type="button"
-                  onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-                  className="px-3 py-2 hover:bg-neutral-200"
+                  onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                  className="p-2 hover:bg-white rounded-lg text-slate-600 transition-colors"
                 >
-                  <Minus size={14} />
+                  <Minus size={15} />
                 </button>
-                <span className="px-4 text-sm font-mono font-bold">
-                  {quantity}
-                </span>
+                <span className="px-5 font-bold text-sm text-slate-900">{quantity}</span>
                 <button
                   type="button"
-                  onClick={() => setQuantity((q) => Math.min(product.inventoryCount, q + 1))}
-                  className="px-3 py-2 hover:bg-neutral-200"
+                  onClick={() => setQuantity(Math.min(product.inventoryCount, quantity + 1))}
+                  className="p-2 hover:bg-white rounded-lg text-slate-600 transition-colors"
                 >
-                  <Plus size={14} />
+                  <Plus size={15} />
                 </button>
               </div>
 
               <button
                 type="button"
                 onClick={handleAddToCart}
-                disabled={product.inventoryCount === 0}
-                className="flex-1 bg-black text-white border-2 border-black py-3 px-6 text-xs font-mono font-bold uppercase hover:bg-neutral-800 disabled:opacity-50 flex items-center justify-center gap-2 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]"
+                className={`flex-1 py-3.5 px-6 rounded-xl font-bold text-sm flex items-center justify-center gap-2 shadow-sm transition-all ${
+                  added
+                    ? 'bg-emerald-600 text-white'
+                    : 'bg-slate-900 hover:bg-slate-800 text-white hover:shadow-md'
+                }`}
               >
-                {added ? <Check size={16} /> : <ShoppingCart size={16} />}
-                <span>{added ? 'Added to Cart!' : 'Add to Cart'}</span>
+                {added ? (
+                  <>
+                    <Check size={18} />
+                    <span>Added to Cart!</span>
+                  </>
+                ) : (
+                  <>
+                    <ShoppingCart size={18} />
+                    <span>Add to Cart • ${(product.price * quantity).toFixed(2)}</span>
+                  </>
+                )}
               </button>
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-2 text-xs font-mono border-2 border-black p-3 bg-white">
-            <div className="flex items-center gap-1.5">
-              <Truck size={16} />
-              <span>Free Delivery</span>
+          {/* Guarantee Badges */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-6 border-t border-slate-100">
+            <div className="flex items-center gap-2.5 text-xs text-slate-600">
+              <Truck size={18} className="text-indigo-600 shrink-0" />
+              <span>Fast Tracked Dispatch</span>
             </div>
-            <div className="flex items-center gap-1.5">
-              <RotateCcw size={16} />
-              <span>30-Day Returns</span>
+            <div className="flex items-center gap-2.5 text-xs text-slate-600">
+              <Shield size={18} className="text-emerald-600 shrink-0" />
+              <span>30-Day Money Back</span>
             </div>
-            <div className="flex items-center gap-1.5">
-              <Shield size={16} />
-              <span>2-Yr Warranty</span>
+            <div className="flex items-center gap-2.5 text-xs text-slate-600">
+              <RotateCcw size={18} className="text-amber-600 shrink-0" />
+              <span>Verified Fair Price</span>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="mt-12">
-        <PriceComparisonWidget
-          productId={product.id}
-          ourPrice={product.price}
-        />
-      </div>
+      {/* Embedded Live Price Intelligence */}
+      <PriceComparisonWidget productId={product.id} ourPrice={product.price} />
     </div>
   );
 }
