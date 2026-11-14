@@ -21,9 +21,28 @@ export class ScraperApp {
   }
 
   private setupMiddleware(): void {
+    const allowedOrigins = (process.env['FRONTEND_URL'] || 'http://localhost:3000')
+      .split(',')
+      .map((url) => url.trim().replace(/\/$/, ''))
+      .filter(Boolean);
+
     this.app.use(cors({
-      origin: process.env['FRONTEND_URL'] || 'http://localhost:3000',
-      credentials: true
+      origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
+        if (
+          !origin ||
+          allowedOrigins.includes(origin) ||
+          origin.startsWith('http://localhost:') ||
+          origin.startsWith('http://127.0.0.1:') ||
+          origin.endsWith('.vercel.app')
+        ) {
+          callback(null, true);
+        } else {
+          callback(new Error('Blocked by CORS policy'));
+        }
+      },
+      credentials: true,
+      methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+      allowedHeaders: ['Content-Type', 'Authorization', 'Cookie']
     }));
     this.app.use(express.json());
   }

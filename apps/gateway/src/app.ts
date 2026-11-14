@@ -32,10 +32,20 @@ export class GatewayApp {
       crossOriginEmbedderPolicy: false
     }));
 
-    const allowedOrigin = process.env['FRONTEND_URL'] || 'http://localhost:3000';
+    const allowedOrigins = (process.env['FRONTEND_URL'] || 'http://localhost:3000')
+      .split(',')
+      .map((url) => url.trim().replace(/\/$/, ''))
+      .filter(Boolean);
+
     this.app.use(cors({
       origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
-        if (!origin || origin === allowedOrigin || origin.startsWith('http://localhost:') || origin.startsWith('http://127.0.0.1:')) {
+        if (
+          !origin ||
+          allowedOrigins.includes(origin) ||
+          origin.startsWith('http://localhost:') ||
+          origin.startsWith('http://127.0.0.1:') ||
+          origin.endsWith('.vercel.app')
+        ) {
           callback(null, true);
         } else {
           callback(new Error('Blocked by CORS policy'));
@@ -43,7 +53,7 @@ export class GatewayApp {
       },
       credentials: true,
       methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-      allowedHeaders: ['Content-Type', 'Authorization', 'stripe-signature']
+      allowedHeaders: ['Content-Type', 'Authorization', 'stripe-signature', 'Cookie']
     }));
 
     this.app.use(cookieParser());
