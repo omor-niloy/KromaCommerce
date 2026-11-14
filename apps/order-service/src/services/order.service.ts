@@ -41,7 +41,7 @@ export class OrderService extends BaseService implements IOrderService {
       throw new BadRequestError('One or more selected products no longer exist');
     }
 
-    const productMap = new Map(products.map((p) => [p.id, p]));
+    const productMap = new Map(products.map((p: any) => [p.id, p]));
     const orderItemsData: Array<{
       productId: string;
       productName: string;
@@ -184,7 +184,7 @@ export class OrderService extends BaseService implements IOrderService {
       return;
     }
 
-    await this.db.$transaction(async (tx) => {
+    await this.db.$transaction(async (tx: any) => {
       await tx.order.update({
         where: { id: orderId },
         data: {

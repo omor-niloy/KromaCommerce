@@ -78,9 +78,9 @@ export class ScraperRepository extends BaseRepository<CompetitorPriceRecord> imp
       };
     }
 
-    const prices = records.map((r) => r.price);
+    const prices = records.map((r: any) => r.price);
     const lowest = Math.min(...prices);
-    const avg = Math.round((prices.reduce((sum, p) => sum + p, 0) / prices.length) * 100) / 100;
+    const avg = Math.round((prices.reduce((sum: number, p: number) => sum + p, 0) / prices.length) * 100) / 100;
     const diff = Math.round(((lowest - product.price) / product.price) * 10000) / 100;
 
     return {

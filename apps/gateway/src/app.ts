@@ -34,7 +34,7 @@ export class GatewayApp {
 
     const allowedOrigin = process.env['FRONTEND_URL'] || 'http://localhost:3000';
     this.app.use(cors({
-      origin: (origin, callback) => {
+      origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
         if (!origin || origin === allowedOrigin || origin.startsWith('http://localhost:') || origin.startsWith('http://127.0.0.1:')) {
           callback(null, true);
         } else {

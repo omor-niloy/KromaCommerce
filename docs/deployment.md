@@ -46,7 +46,7 @@ Render provides a free Web Service container that runs continuously and re-deplo
    - **Environment:** `Node`
    - **Build Command:**
      ```bash
-     npm install && npm run build
+     npm install --include=dev && npm run build:backend
      ```
    - **Start Command:**
      ```bash
