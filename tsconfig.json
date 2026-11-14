@@ -1,0 +1,16 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@ecommerce/common": ["./packages/common/src"],
+      "@ecommerce/database": ["./packages/database/src"],
+      "@ecommerce/auth-service": ["./apps/auth-service/src"],
+      "@ecommerce/catalog-service": ["./apps/catalog-service/src"],
+      "@ecommerce/order-service": ["./apps/order-service/src"],
+      "@ecommerce/scraper-service": ["./apps/scraper-service/src"],
+      "@ecommerce/gateway": ["./apps/gateway/src"]
+    }
+  },
+  "exclude": ["node_modules", "dist", ".next"]
+}

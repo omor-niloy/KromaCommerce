@@ -1,0 +1,45 @@
+{
+  "name": "kromacommerce",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Enterprise-grade microservice e-commerce platform with price intelligence engine",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "build": "npm run build --workspaces --if-present",
+    "clean:ports": "fuser -k 3000/tcp 8000/tcp 8001/tcp 8002/tcp 8003/tcp 8004/tcp 2>/dev/null || true",
+    "dev": "node scripts/dev-runner.js",
+    "predev:services": "npm run clean:ports",
+    "dev:services": "concurrently -k --kill-others --teardown \"npm run clean:ports\" -n \"gateway,auth,catalog,order,scraper,web\" \"npm run dev:gateway\" \"npm run dev:auth\" \"npm run dev:catalog\" \"npm run dev:order\" \"npm run dev:scraper\" \"npm run dev:web\"",
+    "test": "vitest run tests/unit tests/acceptance",
+    "test:unit": "vitest run tests/unit",
+    "test:acceptance": "vitest run tests/acceptance",
+    "test:e2e": "playwright test",
+    "lint": "npm run lint --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "dev:gateway": "npm run dev --workspace=apps/gateway",
+    "dev:auth": "npm run dev --workspace=apps/auth-service",
+    "dev:catalog": "npm run dev --workspace=apps/catalog-service",
+    "dev:order": "npm run dev --workspace=apps/order-service",
+    "dev:scraper": "npm run dev --workspace=apps/scraper-service",
+    "dev:web": "npm run dev --workspace=apps/web",
+    "db:generate": "npm run db:generate --workspace=packages/database",
+    "db:push": "npm run db:push --workspace=packages/database",
+    "db:seed": "npm run db:seed --workspace=packages/database"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.61.1",
+    "@types/node": "^20.11.24",
+    "@types/supertest": "^7.2.1",
+    "concurrently": "^9.2.5",
+    "supertest": "^7.3.2",
+    "typescript": "^5.3.3",
+    "vitest": "^3.2.7"
+  },
+  "dependencies": {
+    "@neon/config": "^0.0.0",
+    "@neon/env": "^0.0.0"
+  }
+}

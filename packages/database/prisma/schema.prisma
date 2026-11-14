@@ -1,0 +1,117 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum UserRole {
+  CUSTOMER
+  ADMIN
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  FAILED
+  CANCELLED
+  SHIPPED
+}
+
+model User {
+  id               String   @id @default(uuid())
+  email            String   @unique
+  passwordHash     String
+  name             String
+  role             UserRole @default(CUSTOMER)
+  refreshTokenHash String?
+  orders           Order[]
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([email])
+}
+
+model Category {
+  id          String    @id @default(uuid())
+  name        String
+  slug        String    @unique
+  description String?
+  products    Product[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([slug])
+}
+
+model Product {
+  id                    String                  @id @default(uuid())
+  name                  String
+  slug                  String                  @unique
+  description           String
+  price                 Float
+  inventoryCount        Int                     @default(0)
+  imageUrl              String
+  categoryId            String
+  category              Category                @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  competitorUrl         String?
+  orderItems            OrderItem[]
+  competitorPriceRecords CompetitorPriceRecord[]
+  createdAt             DateTime                @default(now())
+  updatedAt             DateTime                @updatedAt
+
+  @@index([slug])
+  @@index([categoryId])
+  @@index([price])
+}
+
+model Order {
+  id              String      @id @default(uuid())
+  userId          String
+  user            User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  totalAmount     Float
+  currency        String      @default("usd")
+  status          OrderStatus @default(PENDING)
+  paymentId       String?
+  paymentProvider String      @default("mock")
+  shippingAddress String?
+  items           OrderItem[]
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  @@index([userId])
+  @@index([status])
+}
+
+model OrderItem {
+  id          String   @id @default(uuid())
+  orderId     String
+  order       Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId   String
+  product     Product  @relation(fields: [productId], references: [id], onDelete: Restrict)
+  productName String
+  unitPrice   Float
+  quantity    Int
+  totalPrice  Float
+  createdAt   DateTime @default(now())
+
+  @@index([orderId])
+  @@index([productId])
+}
+
+model CompetitorPriceRecord {
+  id                   String   @id @default(uuid())
+  productId            String
+  product              Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  competitorName       String
+  competitorUrl        String
+  price                Float
+  currency             String   @default("usd")
+  differencePercentage Float
+  createdAt            DateTime @default(now())
+
+  @@index([productId])
+  @@index([createdAt])
+}

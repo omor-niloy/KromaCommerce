@@ -1,0 +1,1 @@
+{"version":3,"file":"mock-store-scraper.strategy.d.ts","sourceRoot":"","sources":["mock-store-scraper.strategy.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,qBAAqB,EAAmB,MAAM,mBAAmB,CAAC;AAC3E,OAAO,EAAE,mBAAmB,EAAE,MAAM,yBAAyB,CAAC;AAE9D;;GAEG;AACH,qBAAa,kCAAmC,SAAQ,mBAAmB;IAClE,QAAQ,CAAC,GAAG,EAAE,MAAM,GAAG,OAAO;IAIxB,MAAM,CAAC,SAAS,EAAE,MAAM,GAAG,OAAO,CAAC,qBAAqB,CAAC;CAsCvE"}

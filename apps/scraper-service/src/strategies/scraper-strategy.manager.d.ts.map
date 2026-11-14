@@ -1,0 +1,1 @@
+{"version":3,"file":"scraper-strategy.manager.d.ts","sourceRoot":"","sources":["scraper-strategy.manager.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,gBAAgB,EAAE,MAAM,mBAAmB,CAAC;AAIrD;;GAEG;AACH,qBAAa,sBAAsB;IACjC,OAAO,CAAC,QAAQ,CAAC,UAAU,CAAqB;gBAEpC,UAAU,CAAC,EAAE,gBAAgB,EAAE;IAO3C;;OAEG;IACI,eAAe,CAAC,SAAS,EAAE,MAAM,GAAG,gBAAgB;CAQ5D"}
