@@ -1,30 +1,56 @@
 # KromaCommerce
 
-> **Enterprise-Grade Microservices E-Commerce Platform with Autonomous Playwright Competitor Price Intelligence**
+[![Storefront Live](https://img.shields.io/badge/Storefront-Live%20on%20Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white)](https://kromacommercevercel.vercel.app/)
+[![API Gateway Live](https://img.shields.io/badge/API%20Gateway-Live%20on%20Render-46E3B7?style=for-the-badge&logo=render&logoColor=black)](https://kromacommerce.onrender.com/health)
+[![Database](https://img.shields.io/badge/Database-Neon%20PostgreSQL-00E599?style=for-the-badge&logo=postgresql&logoColor=white)](https://neon.tech)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.3-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Next.js](https://img.shields.io/badge/Next.js-14%20App%20Router-black?style=for-the-badge&logo=next.js&logoColor=white)](https://nextjs.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](LICENSE)
 
-KromaCommerce is a distributed, full-stack e-commerce system built with strict Object-Oriented Programming (OOP) principles, automated price intelligence, robust testing pyramid (Unit, Acceptance, and Playwright E2E), and zero-bias dual-agent QA architecture.
+> **Enterprise-Grade Distributed E-Commerce Monorepo with Autonomous Playwright Competitor Price Intelligence & Multi-Mode Cloud Architecture.**
 
-Engineered to run seamlessly in **Multi-Container Microservices Mode** (Docker Compose) and **Consolidated Free-Tier Container Mode** for 100% free cloud deployment on **Vercel** + **Render / Koyeb** + **Neon / Supabase**.
+---
+
+## 🌐 Live Deployments
+
+| Component | Platform | Live URL | Description |
+| :--- | :--- | :--- | :--- |
+| **Storefront Client** | **Vercel** (Edge) | [https://kromacommercevercel.vercel.app/](https://kromacommercevercel.vercel.app/) | Next.js 14 App Router, Tailwind CSS, Zustand, Lucide vector icons |
+| **API Gateway & Backend** | **Render** (Cloud) | [https://kromacommerce.onrender.com/](https://kromacommerce.onrender.com/health) | Express.js API Gateway, Helmet CSP, Sliding-window rate limiters |
+| **Relational Database** | **Neon** (Singapore) | *Serverless AWS ap-southeast-1* | PostgreSQL with PgBouncer connection pooling & Prisma ORM |
+
+### 🔑 Demo Accounts for Live Testing
+
+You can use these seeded credentials directly in the live storefront:
+
+| Role | Email | Password | Access Privileges |
+| :--- | :--- | :--- | :--- |
+| **`ADMIN`** | `admin@kromacommerce.com` | `Admin123!` | Access to Admin Console ([/admin](https://kromacommercevercel.vercel.app/admin)), trigger Playwright competitor price sync, view price intelligence |
+| **`CUSTOMER`** | `customer@kromacommerce.com` | `Customer123!` | Storefront catalog browsing, multi-facet filtering, cart drawer, multi-step shipping checkout |
 
 ---
 
 ## 1. System Topology & Architecture
 
 ```
-                       [ Next.js 15 App Router Frontend ]
-                                  (apps/web)
+                       [ Next.js 14 App Router Frontend ]
+                          (https://kromacommercevercel.vercel.app)
                                        │
-                                       ▼ (Port 8000)
+                                       ▼ (HTTPS)
                            [ Express.js API Gateway ]
-                                 (apps/gateway)
+                        (https://kromacommerce.onrender.com)
                                        │
       ┌──────────────────┬─────────────┴───────────────┬──────────────────┐
       ▼                  ▼                             ▼                  ▼
 [ Auth Service ]  [ Catalog Service ]          [ Order Service ]   [ Scraper Service ]
-  (Port 8001)        (Port 8002)                  (Port 8003)         (Port 8004)
-  • OAuth 2.0        • Product Search             • Stripe Sessions   • Playwright Headless
-  • JWT Rotation     • Multi-facet Filters        • Mock Gateway      • Competitor Price Feed
+  • OAuth 2.0        • Product Search             • Checkout Flow     • Playwright Headless
+  • JWT Rotation     • Multi-facet Filters        • Strategy Pattern  • Competitor Price Feed
   • RBAC             • Inventory Ledger           • Signed Webhooks   • Historical Records
+      │                  │                             │                  │
+      └──────────────────┴─────────────┬───────────────┴──────────────────┘
+                                       ▼
+                       [ Neon Serverless PostgreSQL ]
+                       (PgBouncer Connection Pooling)
 ```
 
 ---
@@ -34,46 +60,44 @@ Engineered to run seamlessly in **Multi-Container Microservices Mode** (Docker C
 | Microservice | Directory | Port | Responsibilities | Key Design Patterns |
 | :--- | :--- | :---: | :--- | :--- |
 | **API Gateway** | `apps/gateway` | `8000` | Ingress, Rate Limiting, Helmet CSP, Reverse Proxy Routing | Facade, Reverse Proxy |
-| **Auth Service** | `apps/auth-service` | `8001` | Password Hashing, JWT Rotation, Cookie Auth, RBAC | Controller-Service-Repo |
+| **Auth Service** | `apps/auth-service` | `8001` | Password Hashing, JWT Rotation, Cookie Auth, RBAC | Controller-Service-Repository |
 | **Catalog Service** | `apps/catalog-service` | `8002` | Products, Categories, Inventory, Filtering & Search | Repository Pattern |
-| **Order Service** | `apps/order-service` | `8003` | Cart checkout, Stripe checkout sessions, Webhook verification | **Strategy Pattern** (`IPaymentGateway`) |
+| **Order Service** | `apps/order-service` | `8003` | Cart checkout, Shipping validation, Webhook verification | **Strategy Pattern** (`IPaymentGateway`) |
 | **Scraper Service** | `apps/scraper-service` | `8004` | Headless Playwright worker, competitor crawling, price tracking | **Strategy Pattern** (`IScraperStrategy`) |
-| **Web Client** | `apps/web` | `3000` | Next.js 15 App Router, Tailwind CSS, Lucide icons, Zustand | Component / Store |
+| **Web Client** | `apps/web` | `3000` | Next.js 14 App Router, Tailwind CSS, Lucide icons, Zustand | Component / Store |
 
 ---
 
-## 3. Core Software Engineering Standards
+## 3. Key Engineering Highlights (CV / Portfolio)
 
-1. **Object-Oriented Programming (OOP):**
-   - Class-based architecture across all services: `BaseController`, `BaseService`, `BaseRepository<T>`.
-   - Explicit TypeScript interface contracts (`IProductRepository`, `IOrderRepository`, `IAuthService`, `IPaymentGateway`, `IScraperStrategy`).
-   - Dependency Injection via class constructors.
-2. **Strategy Pattern:**
-   - **Payment Gateway:** `StripePaymentGateway` (production/test mode) and `MockPaymentGateway` (zero-latency deterministic testing for CI/E2E).
-   - **Web Scraper:** `MockCompetitorStoreScraperStrategy` (deterministic offline/online crawler) and `GenericWebScraperStrategy`.
-3. **Frontend UI Aesthetics:**
-   - **Strictly No Emojis:** All iconography utilizes clean vector SVG icons from `lucide-react`.
-   - **Pure Colors Only:** Crisp, flat solid colors (`#000000`, `#ffffff`, pure saturated accents) without gradients or muted pastels.
-4. **Dual-Agent Zero-Bias Testing Architecture (Rule 7):**
-   - `DevAgent` authors implementation, architecture, and documentation.
-   - `TestAgent` independently authors adversarial Unit, Supertest Acceptance, and Playwright E2E browser tests based strictly on `/docs` specifications.
-5. **Version Control Governance:**
-   - **Agent Will Not Commit:** The AI assistant never commits or pushes to git. All git commits and tagging remain exclusively under the command of the human developer.
+- **Class-Based Object-Oriented Architecture (OOP):** Built with strict encapsulation, dependency injection via constructors, and explicit TypeScript interfaces (`IProductRepository`, `IOrderRepository`, `IAuthService`, `IPaymentGateway`, `IScraperStrategy`).
+- **Design Patterns in Practice:**
+  - **Strategy Pattern:** Used for payment gateways (`StripePaymentGateway` and deterministic `MockPaymentGateway`) and web crawlers (`MockCompetitorStoreScraperStrategy` and `GenericWebScraperStrategy`).
+  - **Repository Pattern:** Fully decouples business logic from persistence queries across all microservices.
+  - **Singleton Pattern:** Manages database connection pool lifecycles and Redis/in-memory rate limit stores.
+- **Autonomous Headless Browser Intelligence:** Embedded Playwright scraper crawls competitor catalogs in real time, computing price variance percentages and tracking historical price fluctuations.
+- **Defense-in-Depth Security:**
+  - Dual JWT token authentication: short-lived access tokens (15m) paired with rotating HTTP-only, `SameSite=Strict` refresh cookies.
+  - Multi-tier sliding-window rate limiters protecting authentication routes from brute-force attempts.
+  - Helmet Content-Security-Policy with strict frame and script boundaries.
+- **Dual-Mode Cloud Architecture:** Operates both as **Distributed Microservices** (via Docker Compose) and in **Consolidated Mode** to run within single-instance free cloud tiers (Render + Vercel + Neon).
+- **Dual-Agent Zero-Bias Testing Architecture:** 104+ Vitest unit & integration tests and Playwright E2E browser test automation authored by an independent test agent.
 
 ---
 
 ## 4. Documentation Index
 
-All architectural contracts and service specifications are documented in the `/docs` directory:
-- [`/docs/architecture.md`](docs/architecture.md): System topology, data flow, and design patterns.
-- [`/docs/deployment.md`](docs/deployment.md): Complete guide to 100% free tier hosting (Vercel + Render + Neon).
-- [`/docs/testing.md`](docs/testing.md): Automated testing pyramid and execution instructions.
-- [`/docs/api/auth.md`](docs/api/auth.md): Auth & Identity REST API contracts.
-- [`/docs/api/catalog.md`](docs/api/catalog.md): Catalog, Products, and Categories contracts.
-- [`/docs/api/orders.md`](docs/api/orders.md): Order creation, checkout, and webhook contracts.
-- [`/docs/api/scraper.md`](docs/api/scraper.md): Competitor price intelligence and mock store contracts.
-- [`/docs/api/gateway.md`](docs/api/gateway.md): Gateway rate limiting and reverse proxy specifications.
-- [`/docs/services/`](docs/services/): Dedicated architectural documents for each microservice.
+Detailed architectural contracts, API specifications, and service documentation reside in [`/docs`](docs/):
+
+- [`/docs/architecture.md`](docs/architecture.md) — Comprehensive system topology, data flow, and design pattern implementation.
+- [`/docs/deployment.md`](docs/deployment.md) — Free cloud deployment setup for Vercel, Render, and Neon.
+- [`/docs/testing.md`](docs/testing.md) — Testing strategy, test pyramid breakdown, and execution commands.
+- [`/docs/api/auth.md`](docs/api/auth.md) — Authentication, registration, and token rotation API contracts.
+- [`/docs/api/catalog.md`](docs/api/catalog.md) — Product search, filtering, and category contracts.
+- [`/docs/api/orders.md`](docs/api/orders.md) — Checkout, order state machine, and webhook verification contracts.
+- [`/docs/api/scraper.md`](docs/api/scraper.md) — Competitor price monitoring and mock crawler contracts.
+- [`/docs/api/gateway.md`](docs/api/gateway.md) — Ingress routing and rate limiting rules.
+- [`/docs/services/`](docs/services/) — Dedicated architectural deep dives for each individual microservice.
 
 ---
 
@@ -82,40 +106,33 @@ All architectural contracts and service specifications are documented in the `/d
 ### Prerequisites
 - Node.js `v18.x` or later
 - npm `v10.x` or later
-- Docker & Docker Compose (optional for local multi-container testing)
+- Docker & Docker Compose (optional for local multi-container mode)
 
-### Installation
+### 1. Installation
 ```bash
-# 1. Install all monorepo dependencies
+# Clone the repository
+git clone https://github.com/omor-niloy/KromaCommerce.git
+cd KromaCommerce
+
+# Install dependencies across all monorepo packages
 npm install
 
-# 2. Configure environment variables
+# Copy environment template
 cp .env.example .env
 
-# 3. Generate Prisma client & build packages
+# Generate Prisma client and compile packages
 npm run db:generate
 npm run build
 ```
 
-### Running Locally with Hot-Reload (1-Command Startup)
+### 2. Running Locally (Single Command Hot-Reload)
 ```bash
-# Start BOTH Backend API Gateway & Next.js Frontend concurrently with full hot-reloading:
+# Start API Gateway (port 8000) & Next.js Frontend (port 3000) concurrently:
 npm run dev
 
-# Or start services individually:
-npm run dev:gateway    # API Gateway on port 8000 with tsx watch
-npm run dev:web        # Next.js Frontend on port 3000 with Fast Refresh
-npm run dev:services   # Run all 5 microservices as separate processes concurrently
-
-# Option C: Multi-Container Docker Compose
+# Or run via Multi-Container Docker Compose:
 docker compose up --build
 ```
-
-### Seeded Test Accounts (Local Testing Only)
-| Role | Email | Password | Access Privileges |
-| :--- | :--- | :--- | :--- |
-| **`ADMIN`** | `admin@kromacommerce.com` | *(Configured in `packages/database/src/seed.ts`)* | Admin Console (`/admin`), Playwright crawler trigger, catalog mutations |
-| **`CUSTOMER`** | `customer@kromacommerce.com` | *(Configured in `packages/database/src/seed.ts`)* | Storefront browsing, cart management, checkout, order history |
 
 ---
 
@@ -128,7 +145,7 @@ npm run test:unit
 # Run API Acceptance Tests (Supertest)
 npm run test:acceptance
 
-# Run Playwright E2E Browser Automation
+# Run End-to-End Browser Tests (Playwright)
 npm run test:e2e
 ```
 
@@ -136,4 +153,4 @@ npm run test:e2e
 
 ## 7. License
 
-MIT License. Designed and built with enterprise standards.
+MIT License. Designed and engineered with enterprise production standards.

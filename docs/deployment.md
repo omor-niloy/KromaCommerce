@@ -63,7 +63,7 @@ Render provides a free Web Service container that runs continuously and re-deplo
    | `JWT_ACCESS_SECRET` | *Generate a random 32-character string (e.g. `openssl rand -hex 32`)* | Access token signature |
    | `JWT_REFRESH_SECRET` | *Generate a random 32-character string (e.g. `openssl rand -hex 32`)* | Refresh token signature |
 6. Click **Deploy Web Service**.
-7. Once deployed, copy your backend URL (e.g. `https://kromacommerce-api.onrender.com`).
+7. Live Backend URL: `https://kromacommerce.onrender.com` (Health check: `/health`).
 
 ---
 
@@ -72,16 +72,26 @@ Render provides a free Web Service container that runs continuously and re-deplo
 Vercel provides free, high-performance Next.js edge hosting with continuous deployment.
 
 1. Go to [vercel.com](https://vercel.com) and sign in with GitHub.
-2. Click **Add New...** ➔ **Project**, and select your KromaCommerce GitHub repository.
+2. Click **Add New...** ➔ **Project**, and select your KromaCommerce GitHub repository (`omor-niloy/KromaCommerce`).
 3. In the project configuration:
    - **Root Directory:** Click *Edit* and select **`apps/web`**.
    - **Framework Preset:** `Next.js` (detected automatically).
-4. Expand **Environment Variables** and add:
+4. Under **Environment Variables**, add:
    | Key | Value |
    | :--- | :--- |
-   | `NEXT_PUBLIC_GATEWAY_URL` | *Your Render URL from Step 2 (e.g. `https://kromacommerce-api.onrender.com`)* |
+   | `NEXT_PUBLIC_GATEWAY_URL` | `https://kromacommerce.onrender.com` |
 5. Click **Deploy**.
-6. Vercel will build and launch your store at `https://your-project.vercel.app`!
+6. Live Storefront URL: [https://kromacommercevercel.vercel.app/](https://kromacommercevercel.vercel.app/)!
+
+---
+
+## Live Production Architecture & URLs
+
+| Service | Host | Live Production URL |
+| :--- | :--- | :--- |
+| **Storefront** | Vercel Edge Network | [https://kromacommercevercel.vercel.app/](https://kromacommercevercel.vercel.app/) |
+| **API Gateway** | Render Web Service | [https://kromacommerce.onrender.com/health](https://kromacommerce.onrender.com/health) |
+| **Database** | Neon Serverless | `ep-empty-rain-azo7s3hh-pooler.c-3.ap-southeast-1.aws.neon.tech` |
 
 ---
 

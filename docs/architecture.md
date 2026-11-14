@@ -11,7 +11,7 @@
 ```mermaid
 flowchart TD
     subgraph ClientLayer ["Client Presentation Layer"]
-        WebClient["Web Client\n(Next.js 15 App Router)\napps/web\n[Vercel Free Tier]"]
+        WebClient["Web Client\n(Next.js 14 App Router)\napps/web\n[https://kromacommercevercel.vercel.app]"]
     end
 
     subgraph GatewayLayer ["Edge & Ingress Layer (Port 8000)"]
