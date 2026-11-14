@@ -11,7 +11,14 @@ export class DatabaseConnection {
    */
   public static getInstance(): PrismaClient {
     if (!DatabaseConnection.instance) {
+      const rawUrl = process.env['DATABASE_URL']?.trim();
+      const cleanUrl = rawUrl ? rawUrl.replace(/^["']+|["']+$/g, '').trim() : undefined;
+      if (cleanUrl) {
+        process.env['DATABASE_URL'] = cleanUrl;
+      }
+
       DatabaseConnection.instance = new PrismaClient({
+        ...(cleanUrl ? { datasources: { db: { url: cleanUrl } } } : {}),
         log: process.env['NODE_ENV'] === 'development' ? ['warn', 'error'] : ['error']
       });
     }

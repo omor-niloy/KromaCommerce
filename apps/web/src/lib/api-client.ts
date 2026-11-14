@@ -13,7 +13,7 @@ export class ApiClient {
   private readonly baseUrl: string;
 
   constructor(baseUrl?: string) {
-    this.baseUrl = baseUrl || (typeof window !== 'undefined' ? '' : process.env['GATEWAY_URL'] || 'http://localhost:8000');
+    this.baseUrl = baseUrl || (typeof window !== 'undefined' ? '' : process.env['NEXT_PUBLIC_GATEWAY_URL'] || process.env['GATEWAY_URL'] || 'http://localhost:8000');
   }
 
   private getAuthHeader(): Record<string, string> {
